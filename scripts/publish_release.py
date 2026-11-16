@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import time
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -16,12 +17,15 @@ def main():
     assets=ROOT/'dist/release-v1.1.0'
     receipt_path=ROOT/'reports/v1.1-release-upload.json'
     def gh(*arguments,capture=False,check=True):
-        result=subprocess.run([args.gh,*map(str,arguments)],cwd=ROOT,text=True,encoding='utf-8',stdout=subprocess.PIPE if capture else None,stderr=subprocess.PIPE if capture else None,timeout=1800)
+        for attempt in range(3 if capture else 1):
+            result=subprocess.run([args.gh,*map(str,arguments)],cwd=ROOT,text=True,encoding='utf-8',stdout=subprocess.PIPE if capture else None,stderr=subprocess.PIPE if capture else None,timeout=1800)
+            if result.returncode==0:break
+            if capture:time.sleep(1)
         if check and result.returncode:
             raise RuntimeError(result.stderr or f'GitHub CLI failed: {arguments[0]}')
         return result
     def find_release():
-        releases=json.loads(gh('api',f'repos/{args.repo}/releases?per_page=100',capture=True).stdout)
+        releases=json.loads(gh('api',f'repos/{args.repo}/releases?per_page=100','-H','Cache-Control: no-cache',capture=True).stdout)
         return next((r for r in releases if r['tag_name']==args.tag),None)
     release=find_release()
     if release:
@@ -31,7 +35,10 @@ def main():
     else:
         branch=subprocess.check_output(['git','-c',f'safe.directory={ROOT.as_posix()}','branch','--show-current'],cwd=ROOT,text=True).strip()
         gh('release','create',args.tag,'--repo',args.repo,'--target',branch,'--draft','--title','Japanese Offline Translator v1.1.0','--notes-file',ROOT/'reports/v1.1-release-notes.md')
-        release=find_release()
+        for attempt in range(5):
+            release=find_release()
+            if release:break
+            time.sleep(1)
         if not release:raise RuntimeError('Draft receipt unavailable')
     receipt=dict(id=release['id'],repository=args.repo,tag=args.tag,draft=True,uploaded=[])
     receipt_path.write_text(json.dumps(receipt,indent=2),encoding='utf-8')
