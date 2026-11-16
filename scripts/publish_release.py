@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor,as_completed
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -42,8 +43,7 @@ def main():
         if not release:raise RuntimeError('Draft receipt unavailable')
     receipt=dict(id=release['id'],repository=args.repo,tag=args.tag,draft=True,uploaded=[])
     receipt_path.write_text(json.dumps(receipt,indent=2),encoding='utf-8')
-    for path in sorted(assets.iterdir()):
-        if not path.is_file():continue
+    def upload(path):
         if path.stat().st_size>=2*1024**3:raise RuntimeError('Asset exceeds 2 GiB')
         with path.open('rb') as stream:expected=hashlib.file_digest(stream,'sha256').hexdigest()
         remote=next((a for a in release['assets'] if a['name']==path.name),None)
@@ -53,8 +53,12 @@ def main():
                 result=gh('release','upload',args.tag,path,'--repo',args.repo,'--clobber',check=False)
                 if result.returncode==0:break
             else:raise RuntimeError('Upload failed; task draft retained for resuming')
-        receipt['uploaded'].append(dict(name=path.name,sha256=expected,bytes=path.stat().st_size))
-        receipt_path.write_text(json.dumps(receipt,indent=2),encoding='utf-8')
+        return dict(name=path.name,sha256=expected,bytes=path.stat().st_size)
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futures=[pool.submit(upload,path) for path in sorted(assets.iterdir()) if path.is_file()]
+        for future in as_completed(futures):
+            receipt['uploaded'].append(future.result())
+            receipt_path.write_text(json.dumps(receipt,indent=2),encoding='utf-8')
     destination=ROOT/'downloads/github-v1.1-verify';destination.mkdir(parents=True,exist_ok=True)
     print('Downloading complete draft assets for independent hash verification',flush=True)
     gh('release','download',args.tag,'--repo',args.repo,'--dir',destination,'--clobber')

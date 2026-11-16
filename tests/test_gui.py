@@ -67,6 +67,27 @@ def test_open_and_edit_output_directly(window,tmp_path):
     assert not w.file_dirty and path.read_text(encoding='utf-8')=='您好。'
     assert list(tmp_path.glob('translation.txt.*.bak'))
 
+def test_single_retranslation_uses_selected_device_and_parameters(window,tmp_path,monkeypatch):
+    from dataclasses import asdict
+    from PySide6.QtCore import QThread,Signal
+    from jot.jobs import Settings,source_hash
+    import jot.gui as module
+    captured=[]
+    class RecordingWorker(QThread):
+        message=Signal(str);file_state=Signal(int,str,object);progress=Signal(int,int);single_result=Signal(int,object)
+        def __init__(self,items,settings,control,single=None):
+            super().__init__();captured.append(settings)
+        def run(self):pass
+    monkeypatch.setattr(module,'Worker',RecordingWorker)
+    w,app=window
+    source=tmp_path/'s.txt';source.write_text('こんにちは。',encoding='utf-8')
+    w.fill_review(dict(source=str(source),source_hash=source_hash(source),output=str(tmp_path/'t.txt'),settings=asdict(Settings(device='cpu')),rows=[dict(source='こんにちは。',target='你好。',initial='你好。',label='1',warnings=[])],warnings=[]))
+    w.review.setCurrentCell(0,3)
+    w.device.setCurrentIndex(1);w.threads.setValue(1);w.beam.setValue(7)
+    w.retranslate()
+    w.worker.wait(2000);app.processEvents()
+    assert captured[0].device=='cuda' and captured[0].threads==1 and captured[0].beam==7
+
 def test_review_edit_save(window,tmp_path):
     from jot.jobs import source_hash,Settings
     from dataclasses import asdict

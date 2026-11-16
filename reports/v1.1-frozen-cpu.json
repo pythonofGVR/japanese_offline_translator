@@ -9,8 +9,8 @@
       "bytes": 494258959,
       "repository": "JustFrederik/m2m_100_418m_ct2_int8",
       "revision": "1aeed44db4dd61a486bba44acf54c76507082a2c",
-      "load_seconds": 1.1197834000013245,
-      "sample_seconds": 1.7953979000012623,
+      "load_seconds": 1.1630474999983562,
+      "sample_seconds": 1.794666200003121,
       "samples": [
         {
           "source": "今日は晴れです。",
@@ -95,7 +95,7 @@
           "warnings": []
         }
       ],
-      "peak_rss_bytes": 670294016,
+      "peak_rss_bytes": 665612288,
       "zh-TW": "今天是清潔的。",
       "en": "Today is clear.",
       "device": "cpu",
@@ -106,8 +106,8 @@
       "bytes": 1253246395,
       "repository": "JustFrederik/m2m_100_1.2b_ct2_int8",
       "revision": "0e07f3608b9be1a81df0813b53c3e338ecc3890a",
-      "load_seconds": 1.5217789999987872,
-      "sample_seconds": 2.5934646999994584,
+      "load_seconds": 1.7730940999972518,
+      "sample_seconds": 3.2854131999993115,
       "samples": [
         {
           "source": "今日は晴れです。",
@@ -190,7 +190,7 @@
           "warnings": []
         }
       ],
-      "peak_rss_bytes": 1499770880,
+      "peak_rss_bytes": 1503354880,
       "zh-TW": "今天是晴朗的。",
       "en": "Today is clear.",
       "device": "cpu",
@@ -203,133 +203,133 @@
       "model": "fast",
       "file": "sample.ass",
       "status": "PASS",
-      "seconds": 0.1593470999978308
+      "seconds": 0.024709699995582923
     },
     {
       "model": "fast",
       "file": "sample.docx",
       "status": "PASS",
-      "seconds": 0.32128259999808506
+      "seconds": 0.044590099998458754
     },
     {
       "model": "fast",
       "file": "sample.lrc",
       "status": "PASS",
-      "seconds": 0.02108560000124271
+      "seconds": 0.012716400000499561
     },
     {
       "model": "fast",
       "file": "sample.md",
       "status": "PASS",
-      "seconds": 0.16136700000060955
+      "seconds": 0.012422300002072006
     },
     {
       "model": "fast",
       "file": "sample.pdf",
       "status": "PASS",
-      "seconds": 0.020773299998836592
+      "seconds": 0.012556000001495704
     },
     {
       "model": "fast",
       "file": "sample.srt",
       "status": "PASS",
-      "seconds": 0.03234560000055353
+      "seconds": 0.011516300000948831
     },
     {
       "model": "fast",
       "file": "sample.ssa",
       "status": "PASS",
-      "seconds": 0.013833000000886386
+      "seconds": 0.010540299997956026
     },
     {
       "model": "fast",
       "file": "sample.txt",
       "status": "PASS",
-      "seconds": 0.0111006000006455
+      "seconds": 0.01297510000586044
     },
     {
       "model": "fast",
       "file": "sample.vtt",
       "status": "PASS",
-      "seconds": 0.010180000001128064
+      "seconds": 0.011467899996205233
     },
     {
       "model": "fast",
       "file": "second.srt",
       "status": "PASS",
-      "seconds": 0.01690489999964484
+      "seconds": 0.011338799995428417
     },
     {
       "model": "fast",
       "file": "子目录\\字幕.srt",
       "status": "PASS",
-      "seconds": 0.0790740000011283
+      "seconds": 0.08203950000461191
     },
     {
       "model": "quality",
       "file": "sample.ass",
       "status": "PASS",
-      "seconds": 0.2915919000006397
+      "seconds": 0.024595399998361245
     },
     {
       "model": "quality",
       "file": "sample.docx",
       "status": "PASS",
-      "seconds": 0.5829595999966841
+      "seconds": 0.05640039999707369
     },
     {
       "model": "quality",
       "file": "sample.lrc",
       "status": "PASS",
-      "seconds": 0.027133899999171263
+      "seconds": 0.015237400002661161
     },
     {
       "model": "quality",
       "file": "sample.md",
       "status": "PASS",
-      "seconds": 0.36360200000126497
+      "seconds": 0.020787599998584483
     },
     {
       "model": "quality",
       "file": "sample.pdf",
       "status": "PASS",
-      "seconds": 0.02400619999752962
+      "seconds": 0.017089599998143967
     },
     {
       "model": "quality",
       "file": "sample.srt",
       "status": "PASS",
-      "seconds": 0.024192999997467268
+      "seconds": 0.012244399993505795
     },
     {
       "model": "quality",
       "file": "sample.ssa",
       "status": "PASS",
-      "seconds": 0.015589900001941714
+      "seconds": 0.012456499993277248
     },
     {
       "model": "quality",
       "file": "sample.txt",
       "status": "PASS",
-      "seconds": 0.011505599999509286
+      "seconds": 0.010645900001691189
     },
     {
       "model": "quality",
       "file": "sample.vtt",
       "status": "PASS",
-      "seconds": 0.012114600001950748
+      "seconds": 0.01211180000245804
     },
     {
       "model": "quality",
       "file": "second.srt",
       "status": "PASS",
-      "seconds": 0.011085299996921094
+      "seconds": 0.013782200003333855
     },
     {
       "model": "quality",
       "file": "子目录\\字幕.srt",
       "status": "PASS",
-      "seconds": 0.012813099998311372
+      "seconds": 0.011868300003698096
     },
     {
       "case": "model switch quality -> fast",

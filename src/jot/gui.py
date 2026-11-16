@@ -588,7 +588,7 @@ class MainWindow(QMainWindow):
         row=self.review.currentRow()
         if row<0 or not self.review_result:
             return
-        settings=Settings(**self.review_result['settings'])
+        settings=dataclasses.replace(Settings(**self.review_result['settings']),device=self.device.currentData(),threads=self.threads.value(),beam=self.beam.value())
         self.control=Control()
         self.worker=Worker([],settings,self.control,single=(row,self.review_result['rows'][row]['source'],Path(self.review_result['source']).suffix.lower()=='.md'))
         self.connect_worker()
