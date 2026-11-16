@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+build/
+dist/
+downloads/
+models/**
+!models/README.md
+*.sqlite*
+*.log
+.env*
+!.env.example
+.impeccable/
+reports/local/
