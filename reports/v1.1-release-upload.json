@@ -1,0 +1,44 @@
+{
+  "id": 447437886,
+  "repository": "pythonofGVR/japanese_offline_translator",
+  "tag": "v1.1.0",
+  "draft": true,
+  "uploaded": [
+    {
+      "name": "INSTALL_OFFLINE.md",
+      "sha256": "c4d5f8839bede25384034571ca1627d6b7481a2ba4937832b3082862e8dd8319",
+      "bytes": 1773
+    },
+    {
+      "name": "JapaneseTranslatorSetup-1.bin",
+      "sha256": "ca729d50bf7dbdbbc7a01be2ee54e8069dcb0a9e38eb7c2f90f7e4c164d04bce",
+      "bytes": 598101504
+    },
+    {
+      "name": "JapaneseTranslatorSetup.exe",
+      "sha256": "ae4c924efd5b77d549f4e735f299aa41d2a9c9ae79a401e2a81ef70dd86a79f1",
+      "bytes": 1898196
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "sha256": "293b455ca00a8a15bbabf2016ef3a9421bc428b7757ed3b09830b2710dc2288b",
+      "bytes": 569
+    },
+    {
+      "name": "JapaneseTranslatorSetup-3.bin",
+      "sha256": "99eab8738236c2c27ac7e2984dc9084da838d038182ecec026b362e512c13b6d",
+      "bytes": 600000000
+    },
+    {
+      "name": "JapaneseTranslatorSetup-4.bin",
+      "sha256": "820920797f192a1d0613ee702ce606fb0df4ee145b6a4cff259f1bfb5f948518",
+      "bytes": 318607490
+    },
+    {
+      "name": "JapaneseTranslatorSetup-2.bin",
+      "sha256": "7ec11fe5a74c061dc24f5bb9c6d89466397e959728038863f1e78b9b402b18a8",
+      "bytes": 600000000
+    }
+  ],
+  "download_hashes_verified": true
+}

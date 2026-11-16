@@ -1,0 +1,353 @@
+{
+  "status": "PASS",
+  "platform": "Windows-11-10.0.22631-SP0",
+  "cpu": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel",
+  "logical_cpus": 20,
+  "offline_scope": "Python socket connect/connect_ex/create_connection/getaddrinfo disabled before model loading; native library not firewall-blocked",
+  "models": {
+    "fast": {
+      "bytes": 494258959,
+      "repository": "JustFrederik/m2m_100_418m_ct2_int8",
+      "revision": "1aeed44db4dd61a486bba44acf54c76507082a2c",
+      "load_seconds": 0.4792050999967614,
+      "sample_seconds": 1.6204935999994632,
+      "samples": [
+        {
+          "source": "今日は晴れです。",
+          "reference": "今天天气晴朗。",
+          "category": "简单陈述",
+          "initial": "今天是清洁的。",
+          "target": "今天是清洁的。",
+          "warnings": []
+        },
+        {
+          "source": "昨日買った本を電車の中で読んでいたら、降りる駅を通り過ぎてしまいました。",
+          "reference": "在电车里读昨天买的书时，坐过了要下车的站。",
+          "category": "长句",
+          "initial": "昨天在火车上读到我买的书,我走过了下车站。",
+          "target": "昨天在火车上读到我买的书,我走过了下车站。",
+          "warnings": []
+        },
+        {
+          "source": "えっ、本当に？そんなこと聞いてないよ。",
+          "reference": "啊，真的吗？我没听说过这种事。",
+          "category": "口语",
+          "initial": "是的,真的没听说过。",
+          "target": "是的,真的没听说过。",
+          "warnings": []
+        },
+        {
+          "source": "あの、あの、私は、私は何も知りません。",
+          "reference": "那个，那个，我、我什么都不知道。",
+          "category": "重复语气",
+          "initial": "那,我,我什么都不知道。",
+          "target": "那,我,我什么都不知道。",
+          "warnings": []
+        },
+        {
+          "source": "そうですね。",
+          "reference": "是啊。",
+          "category": "短句",
+          "initial": "是的。",
+          "target": "是的。",
+          "warnings": []
+        },
+        {
+          "source": "田中さんは明日、東京に行きます。",
+          "reference": "田中先生明天去东京。",
+          "category": "专名",
+          "initial": "田中明天去东京。",
+          "target": "田中明天去东京。",
+          "warnings": []
+        },
+        {
+          "source": "はい。でも、まだ決めていません。",
+          "reference": "是的。不过还没有决定。",
+          "category": "对话",
+          "initial": "是的,但我还没有决定。",
+          "target": "是的,但我还没有决定。",
+          "warnings": []
+        },
+        {
+          "source": "この商品の価格は1000円です。谢谢。",
+          "reference": "这件商品的价格是1000日元。谢谢。",
+          "category": "混合文本",
+          "initial": "此商品的价格是1000元,谢谢。",
+          "target": "此商品的价格是1000元,谢谢。",
+          "warnings": [
+            "日元币种可能丢失，请核对"
+          ]
+        },
+        {
+          "source": "午後3時に、駅の前で会いましょう！",
+          "reference": "下午3点在车站前见吧！",
+          "category": "数字符号",
+          "initial": "下午3点,我们在火车站前见面。",
+          "target": "下午3点,我们在火车站前见面。",
+          "warnings": []
+        },
+        {
+          "source": "ねえ、もう少し待って。",
+          "reference": "喂，再等一下。",
+          "category": "语气",
+          "initial": "是的,等一会儿。",
+          "target": "是的,等一会儿。",
+          "warnings": []
+        }
+      ],
+      "peak_rss_bytes": 1160888320,
+      "zh-TW": "今天是清潔的。",
+      "en": "Today is clear.",
+      "device": "cpu",
+      "compute_type": "int8",
+      "fallback_reason": "GPU 不可用，已回退 CPU：没有可用的 NVIDIA CUDA GPU"
+    },
+    "quality": {
+      "bytes": 1253246395,
+      "repository": "JustFrederik/m2m_100_1.2b_ct2_int8",
+      "revision": "0e07f3608b9be1a81df0813b53c3e338ecc3890a",
+      "load_seconds": 1.2818759000001592,
+      "sample_seconds": 2.8173482999991393,
+      "samples": [
+        {
+          "source": "今日は晴れです。",
+          "reference": "今天天气晴朗。",
+          "category": "简单陈述",
+          "initial": "今天是晴朗的。",
+          "target": "今天是晴朗的。",
+          "warnings": []
+        },
+        {
+          "source": "昨日買った本を電車の中で読んでいたら、降りる駅を通り過ぎてしまいました。",
+          "reference": "在电车里读昨天买的书时，坐过了要下车的站。",
+          "category": "长句",
+          "initial": "昨天在火车上读书时,我走过了下车站。",
+          "target": "昨天在火车上读书时,我走过了下车站。",
+          "warnings": []
+        },
+        {
+          "source": "えっ、本当に？そんなこと聞いてないよ。",
+          "reference": "啊，真的吗？我没听说过这种事。",
+          "category": "口语",
+          "initial": "真的吗?我没听说过。",
+          "target": "真的吗?我没听说过。",
+          "warnings": []
+        },
+        {
+          "source": "あの、あの、私は、私は何も知りません。",
+          "reference": "那个，那个，我、我什么都不知道。",
+          "category": "重复语气",
+          "initial": "啊,啊,我什么都不知道。",
+          "target": "啊,啊,我什么都不知道。",
+          "warnings": []
+        },
+        {
+          "source": "そうですね。",
+          "reference": "是啊。",
+          "category": "短句",
+          "initial": "是的吧。",
+          "target": "是的吧。",
+          "warnings": []
+        },
+        {
+          "source": "田中さんは明日、東京に行きます。",
+          "reference": "田中先生明天去东京。",
+          "category": "专名",
+          "initial": "田中明天要去东京。",
+          "target": "田中明天要去东京。",
+          "warnings": []
+        },
+        {
+          "source": "はい。でも、まだ決めていません。",
+          "reference": "是的。不过还没有决定。",
+          "category": "对话",
+          "initial": "是的,但我还没有决定。",
+          "target": "是的,但我还没有决定。",
+          "warnings": []
+        },
+        {
+          "source": "この商品の価格は1000円です。谢谢。",
+          "reference": "这件商品的价格是1000日元。谢谢。",
+          "category": "混合文本",
+          "initial": "这个商品的价格是1000日元,谢谢。",
+          "target": "这个商品的价格是1000日元,谢谢。",
+          "warnings": []
+        },
+        {
+          "source": "午後3時に、駅の前で会いましょう！",
+          "reference": "下午3点在车站前见吧！",
+          "category": "数字符号",
+          "initial": "下午3点,在车站前见!",
+          "target": "下午3点,在车站前见!",
+          "warnings": []
+        },
+        {
+          "source": "ねえ、もう少し待って。",
+          "reference": "喂，再等一下。",
+          "category": "语气",
+          "initial": "好吧,再等一下。",
+          "target": "好吧,再等一下。",
+          "warnings": []
+        }
+      ],
+      "peak_rss_bytes": 2745344000,
+      "zh-TW": "今天是晴朗的。",
+      "en": "Today is clear.",
+      "device": "cpu",
+      "compute_type": "int8",
+      "fallback_reason": "GPU 不可用，已回退 CPU：没有可用的 NVIDIA CUDA GPU"
+    }
+  },
+  "tests": [
+    {
+      "model": "fast",
+      "file": "sample.ass",
+      "status": "PASS",
+      "seconds": 0.16559050000068964
+    },
+    {
+      "model": "fast",
+      "file": "sample.docx",
+      "status": "PASS",
+      "seconds": 0.2974118999991333
+    },
+    {
+      "model": "fast",
+      "file": "sample.lrc",
+      "status": "PASS",
+      "seconds": 0.022821799997473136
+    },
+    {
+      "model": "fast",
+      "file": "sample.md",
+      "status": "PASS",
+      "seconds": 0.13492459999542916
+    },
+    {
+      "model": "fast",
+      "file": "sample.pdf",
+      "status": "PASS",
+      "seconds": 0.01272400000016205
+    },
+    {
+      "model": "fast",
+      "file": "sample.srt",
+      "status": "PASS",
+      "seconds": 0.011571700000786223
+    },
+    {
+      "model": "fast",
+      "file": "sample.ssa",
+      "status": "PASS",
+      "seconds": 0.01198110000404995
+    },
+    {
+      "model": "fast",
+      "file": "sample.txt",
+      "status": "PASS",
+      "seconds": 0.010872400001971982
+    },
+    {
+      "model": "fast",
+      "file": "sample.vtt",
+      "status": "PASS",
+      "seconds": 0.011610400004428811
+    },
+    {
+      "model": "fast",
+      "file": "second.srt",
+      "status": "PASS",
+      "seconds": 0.011521100001118612
+    },
+    {
+      "model": "fast",
+      "file": "子目录\\字幕.srt",
+      "status": "PASS",
+      "seconds": 0.031863600001088344
+    },
+    {
+      "model": "quality",
+      "file": "sample.ass",
+      "status": "PASS",
+      "seconds": 0.314373399996839
+    },
+    {
+      "model": "quality",
+      "file": "sample.docx",
+      "status": "PASS",
+      "seconds": 0.5974809999970603
+    },
+    {
+      "model": "quality",
+      "file": "sample.lrc",
+      "status": "PASS",
+      "seconds": 0.02013180000358261
+    },
+    {
+      "model": "quality",
+      "file": "sample.md",
+      "status": "PASS",
+      "seconds": 0.36362329999974463
+    },
+    {
+      "model": "quality",
+      "file": "sample.pdf",
+      "status": "PASS",
+      "seconds": 0.016988299998047296
+    },
+    {
+      "model": "quality",
+      "file": "sample.srt",
+      "status": "PASS",
+      "seconds": 0.02576019999833079
+    },
+    {
+      "model": "quality",
+      "file": "sample.ssa",
+      "status": "PASS",
+      "seconds": 0.025465999999141786
+    },
+    {
+      "model": "quality",
+      "file": "sample.txt",
+      "status": "PASS",
+      "seconds": 0.012840499999583699
+    },
+    {
+      "model": "quality",
+      "file": "sample.vtt",
+      "status": "PASS",
+      "seconds": 0.014930700002878439
+    },
+    {
+      "model": "quality",
+      "file": "second.srt",
+      "status": "PASS",
+      "seconds": 0.013963799996417947
+    },
+    {
+      "model": "quality",
+      "file": "子目录\\字幕.srt",
+      "status": "PASS",
+      "seconds": 0.016903399999137037
+    },
+    {
+      "case": "model switch quality -> fast",
+      "status": "PASS"
+    },
+    {
+      "case": "standalone translated text editing and backup",
+      "status": "PASS"
+    },
+    {
+      "case": "standalone translated DOCX editing preserving format",
+      "status": "PASS"
+    },
+    {
+      "case": "Python network denied",
+      "status": "PASS"
+    }
+  ],
+  "gpu_absence_simulated": true,
+  "memory_total_bytes": 33960448000
+}
