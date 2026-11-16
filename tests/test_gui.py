@@ -13,6 +13,7 @@ def window(tmp_path,monkeypatch):
     app.processEvents()
     yield w,app
     w.review_dirty=False
+    w.file_dirty=False
     w.close()
 
 def test_add_remove_and_restore(window,tmp_path):
@@ -43,6 +44,29 @@ def test_busy_and_small_layout(window):
     assert w.start_button.isEnabled()
     assert not w.cancel_button.isEnabled()
 
+def test_gpu_and_parameter_controls(window):
+    from jot.parameters import THREAD_MAX,DEFAULT_THREADS,DEFAULT_BEAM
+    w,app=window
+    assert w.device.count()==2
+    assert w.threads.minimum()==1 and w.threads.maximum()==THREAD_MAX
+    assert w.beam.minimum()==1 and w.beam.maximum()==10
+    w.threads.setValue(THREAD_MAX);w.beam.setValue(10)
+    w.reset_parameters.click()
+    assert w.threads.value()==DEFAULT_THREADS and w.beam.value()==DEFAULT_BEAM
+    w.device.setCurrentIndex(1)
+    assert w.settings().device=='cuda'
+
+def test_open_and_edit_output_directly(window,tmp_path):
+    w,app=window
+    path=tmp_path/'translation.txt';path.write_text('你好。',encoding='utf-8')
+    w.load_translated_file(str(path))
+    assert w.tabs.currentIndex()==3
+    w.file_text.setPlainText('您好。')
+    assert w.file_dirty
+    w.save_translated_file()
+    assert not w.file_dirty and path.read_text(encoding='utf-8')=='您好。'
+    assert list(tmp_path.glob('translation.txt.*.bak'))
+
 def test_review_edit_save(window,tmp_path):
     from jot.jobs import source_hash,Settings
     from dataclasses import asdict
@@ -58,3 +82,9 @@ def test_review_edit_save(window,tmp_path):
     assert output.read_text(encoding='utf-8')=='您好。'
     assert source.read_text(encoding='utf-8')=='こんにちは。'
     assert not w.review_dirty
+    w.load_translated_file(str(output))
+    w.file_text.setPlainText('再见。')
+    w.save_translated_file()
+    assert w.review.item(0,3).text()=='再见。'
+    w.save_edits()
+    assert output.read_text(encoding='utf-8')=='再见。'

@@ -1,10 +1,13 @@
 {
   "status": "PASS",
+  "device": "cuda",
+  "standalone_file_edit": true,
+  "automatic_backup": true,
   "real_worker": true,
   "pause_resume": true,
-  "event_loop_heartbeats": 1510,
+  "event_loop_heartbeats": 549,
   "manual_edit_save": true,
   "single_row_real_retranslation": true,
   "source_unchanged": true,
-  "output": "C:\\Users\\11972\\AppData\\Local\\Temp\\jot-gui-files-ldnkr10z\\output\\sample.zh-CN.srt"
+  "output": "C:\\Users\\11972\\AppData\\Local\\Temp\\jot-gui-files-ewskwixg\\output\\sample.zh-CN.srt"
 }

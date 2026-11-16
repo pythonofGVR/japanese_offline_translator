@@ -12,7 +12,7 @@ a = Analysis(
     excludes=['tkinter', 'torch', 'transformers', 'huggingface_hub'],
     noarchive=False,
 )
-# This is a CPU-only release. cuDNN is neither used nor required by the PE imports.
+# These text models use cuBLAS for CUDA. cuDNN is not required and is not bundled.
 a.binaries = [entry for entry in a.binaries if 'cudnn' not in entry[0].lower()]
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='JapaneseTranslator', debug=False, bootloader_ignore_signals=False, strip=False, upx=False, console=False)

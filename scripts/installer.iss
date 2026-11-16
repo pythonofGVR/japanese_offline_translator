@@ -1,5 +1,5 @@
 #define AppName "Japanese Offline Translator"
-#define AppVersion "1.0.0"
+#define AppVersion "1.1.0"
 [Setup]
 AppId={{AF8905FA-6BE4-4646-8A40-93A452B12CC7}
 AppName={#AppName}
@@ -13,7 +13,9 @@ OutputDir=..\dist
 OutputBaseFilename=JapaneseTranslatorSetup
 Compression=lzma2/fast
 SolidCompression=yes
-DiskSpanning=no
+DiskSpanning=yes
+DiskSliceSize=1500000000
+SlicesPerDisk=1
 WizardStyle=modern
 LicenseFile=..\LICENSES.md
 [Files]

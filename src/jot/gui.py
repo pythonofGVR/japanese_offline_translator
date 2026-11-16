@@ -5,12 +5,15 @@ import traceback
 
 from PySide6.QtCore import Qt, QThread, Signal, QUrl, QTimer
 from PySide6.QtGui import QDesktopServices, QFont, QColor
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QPushButton, QLabel, QComboBox, QSpinBox, QLineEdit, QCheckBox, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QFileDialog, QMessageBox, QProgressBar, QPlainTextEdit, QTabWidget, QSplitter, QScrollArea)
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFormLayout, QPushButton, QLabel, QComboBox, QSpinBox, QLineEdit, QCheckBox, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QFileDialog, QMessageBox, QProgressBar, QPlainTextEdit, QTabWidget, QSplitter, QScrollArea, QStackedWidget)
 
 from .engine import Engine, MODEL_NAMES, model_status
 from .formats import SUPPORTED
 from .jobs import InputFile, Settings, Control, Cancelled, scan, translate_file, save_review, source_hash
 from .paths import user_data, default_output, read_json, write_json
+from .parameters import THREAD_MIN, THREAD_MAX, DEFAULT_THREADS, BEAM_MIN, BEAM_MAX, DEFAULT_BEAM, restored_integer
+from .devices import gpu_summary
+from .editor import EditableFile, EDITABLE
 
 class Worker(QThread):
     message = Signal(str)
@@ -26,12 +29,16 @@ class Worker(QThread):
         engine = None
         try:
             engine = Engine()
-            self.message.emit(f'正在加载 {MODEL_NAMES[self.settings.model]} · CPU / {self.settings.threads} 线程')
-            engine.load(self.settings.model, self.settings.threads)
-            self.message.emit(f'模型已加载，用时 {engine.load_seconds:.2f} 秒')
+            self.message.emit(f'正在加载 {MODEL_NAMES[self.settings.model]} · {"GPU 优先" if self.settings.device=="cuda" else "CPU"} / {self.settings.threads} 线程')
+            engine.load(self.settings.model, self.settings.threads, self.settings.device)
+            self.message.emit(f'模型已加载，用时 {engine.load_seconds:.2f} 秒 · 实际设备 {engine.device.upper()} / {engine.compute_type}')
+            if engine.fallback_reason:
+                self.message.emit(engine.fallback_reason)
             if self.single is not None:
                 row, text, markdown = self.single
                 result = engine.translate([text], self.settings.language, self.settings.quality, self.settings.beam, markdown=markdown, boundary=self.control.boundary, force=True)
+                if engine.fallback_reason:
+                    self.message.emit(engine.fallback_reason)
                 self.single_result.emit(row, result)
                 return
             for index, item in self.items:
@@ -39,6 +46,8 @@ class Worker(QThread):
                 self.file_state.emit(index, '翻译中', {})
                 try:
                     result = translate_file(item, self.settings, engine, self.control, lambda a,b: self.progress.emit(a,b))
+                    if engine.fallback_reason:
+                        self.message.emit(engine.fallback_reason)
                     self.file_state.emit(index, result['status'], result)
                 except Cancelled:
                     self.file_state.emit(index, '已取消', {})
@@ -86,6 +95,7 @@ class MainWindow(QMainWindow):
         self.inputs, self.results, self.states = [], {}, {}
         self.worker, self.scanner, self.review_result = None, None, None
         self.review_dirty = False
+        self.editable_file, self.file_dirty = None, False
         self.config_path, self.session_path = user_data()/'settings.json', user_data()/'session.json'
         config = read_json(self.config_path, {})
         main = QWidget()
@@ -95,7 +105,7 @@ class MainWindow(QMainWindow):
         title = QLabel('日文离线翻译器')
         title.setObjectName('title')
         outer.addWidget(title)
-        subtitle = QLabel('本地 CPU 翻译 · 保留原文件 · 字幕与文档批量处理')
+        subtitle = QLabel('本地 CPU / GPU 翻译 · 保留原文件 · 字幕与文档批量处理')
         subtitle.setObjectName('muted')
         outer.addWidget(subtitle)
         split = QSplitter()
@@ -117,6 +127,10 @@ class MainWindow(QMainWindow):
         self.model_status = QLabel()
         self.model_status.setWordWrap(True)
         self.model_status.setObjectName('muted')
+        self.device = QComboBox()
+        self.device.addItem('CPU', 'cpu')
+        self.device.addItem('优先 NVIDIA GPU（不可用时用 CPU）', 'cuda')
+        self.device.setToolTip(gpu_summary())
         self.language = QComboBox()
         for label, value in [('简体中文','zh-CN'),('繁體中文','zh-TW'),('English','en')]:
             self.language.addItem(label, value)
@@ -127,15 +141,19 @@ class MainWindow(QMainWindow):
         for name in ['auto','utf-8-sig','utf-16','cp932','shift_jis']:
             self.encoding.addItem('自动检测' if name == 'auto' else name, name)
         self.threads = QSpinBox()
-        self.threads.setRange(1, max(1, os.cpu_count() or 1))
-        self.threads.setValue(4)
+        self.threads.setRange(THREAD_MIN, THREAD_MAX)
+        self.threads.setValue(DEFAULT_THREADS)
+        self.threads.setToolTip(f'范围 {THREAD_MIN}–{THREAD_MAX}；默认 {DEFAULT_THREADS}。GPU 模式中用于 CPU 工作线程。')
         self.beam = QSpinBox()
-        self.beam.setRange(1, 10)
-        self.beam.setValue(3)
+        self.beam.setRange(BEAM_MIN, BEAM_MAX)
+        self.beam.setValue(DEFAULT_BEAM)
+        self.beam.setToolTip(f'范围 {BEAM_MIN}–{BEAM_MAX}；默认 {DEFAULT_BEAM}。越大通常越慢、占用更多显存或内存。')
+        self.reset_parameters = QPushButton('恢复默认参数')
+        self.reset_parameters.clicked.connect(lambda: (self.threads.setValue(DEFAULT_THREADS),self.beam.setValue(DEFAULT_BEAM)))
         self.conflict = QComboBox()
         self.conflict.addItem('重名时自动编号（不覆盖）', 'rename')
         self.conflict.addItem('跳过已有同名文件', 'skip')
-        for label,control in [('翻译模型',self.model),('',self.model_status),('目标语言',self.language),('质量等级',self.quality),('文本编码',self.encoding),('CPU 线程数',self.threads),('搜索宽度（越高越慢）',self.beam),('文件冲突',self.conflict)]:
+        for label,control in [('翻译模型',self.model),('',self.model_status),('运行设备',self.device),('目标语言',self.language),('质量等级',self.quality),('文本编码',self.encoding),(f'CPU 线程数（{THREAD_MIN}–{THREAD_MAX}，默认 {DEFAULT_THREADS}）',self.threads),(f'搜索宽度（{BEAM_MIN}–{BEAM_MAX}，默认 {DEFAULT_BEAM}）',self.beam),('',self.reset_parameters),('文件冲突',self.conflict)]:
             form.addRow(label,control)
         settings_layout.addLayout(form)
         self.output = QLineEdit()
@@ -218,6 +236,33 @@ class MainWindow(QMainWindow):
         self.log.setReadOnly(True)
         self.log.setMaximumBlockCount(1500)
         self.tabs.addTab(self.log,'运行日志')
+        editor_panel = QWidget()
+        editor_layout = QVBoxLayout(editor_panel)
+        editor_actions = QHBoxLayout()
+        self.open_file_button = QPushButton('打开译文文件…')
+        self.open_result_button = QPushButton('编辑选中任务的输出')
+        self.save_file_button = QPushButton('保存文件')
+        self.save_file_as_button = QPushButton('另存为…')
+        for button,callback in [(self.open_file_button,self.open_translated_file),(self.open_result_button,self.open_selected_output),(self.save_file_button,self.save_translated_file),(self.save_file_as_button,lambda: self.save_translated_file(True))]:
+            editor_actions.addWidget(button)
+            button.clicked.connect(callback)
+        editor_layout.addLayout(editor_actions)
+        self.editor_label = QLabel('直接打开译文文件即可编辑，无需原文或校对记录。保存前会自动备份。')
+        self.editor_label.setWordWrap(True)
+        editor_layout.addWidget(self.editor_label)
+        self.file_stack = QStackedWidget()
+        self.file_text = QPlainTextEdit()
+        self.file_text.setPlaceholderText('打开字幕、TXT 或 Markdown 文件，或选择任务的输出文件。')
+        self.file_text.textChanged.connect(self.file_edited)
+        self.file_table = QTableWidget(0,2)
+        self.file_table.setHorizontalHeaderLabels(['位置','DOCX 文本（可编辑，保留文档格式）'])
+        self.file_table.horizontalHeader().setSectionResizeMode(1,QHeaderView.ResizeMode.Stretch)
+        self.file_table.setColumnWidth(0,180)
+        self.file_table.itemChanged.connect(self.file_edited)
+        self.file_stack.addWidget(self.file_text)
+        self.file_stack.addWidget(self.file_table)
+        editor_layout.addWidget(self.file_stack,1)
+        self.tabs.addTab(editor_panel,'文件编辑')
         self.summary = QLabel('添加文件或文件夹，然后开始翻译。')
         right_layout.addWidget(self.summary)
         self.total_progress = QProgressBar()
@@ -241,32 +286,35 @@ class MainWindow(QMainWindow):
         right_layout.addLayout(actions)
         split.addWidget(right)
         split.setStretchFactor(1,1)
-        for name in ('model','language','quality','encoding','conflict'):
+        for name in ('model','language','quality','encoding','conflict','device'):
             control = getattr(self,name)
             control.setCurrentIndex(max(0,control.findData(config.get(name,Settings().__dict__.get(name)))))
         self.output.setText(config.get('output',''))
-        self.threads.setValue(config.get('threads',4))
-        self.beam.setValue(config.get('beam',3))
+        self.threads.setValue(restored_integer(config.get('threads'),DEFAULT_THREADS,THREAD_MIN,THREAD_MAX))
+        self.beam.setValue(restored_integer(config.get('beam'),DEFAULT_BEAM,BEAM_MIN,BEAM_MAX))
         self.preserve.setChecked(config.get('preserve',True))
         self.model.currentIndexChanged.connect(self.refresh_model)
+        self.device.currentIndexChanged.connect(self.refresh_model)
         self.refresh_model()
         self.busy(False)
         self.restore_session()
 
     def settings(self):
-        return Settings(**{n:getattr(self,n).currentData() for n in ('model','language','quality','encoding','conflict')},output=self.output.text().strip(),threads=self.threads.value(),beam=self.beam.value(),preserve=self.preserve.isChecked())
+        return Settings(**{n:getattr(self,n).currentData() for n in ('model','language','quality','encoding','conflict','device')},output=self.output.text().strip(),threads=self.threads.value(),beam=self.beam.value(),preserve=self.preserve.isChecked())
 
     def refresh_model(self):
         ready,size = model_status(self.model.currentData())
         memory = '约 2–4 GB' if self.model.currentData()=='fast' else '约 4–8 GB'
-        self.model_status.setText(f'{"模型就绪" if ready else "模型缺失或下载未完成"} · {size/1024**3:.2f} GB\nCPU · 内存估计 {memory}（非最低保证）')
+        device = 'GPU 优先；不可用时用 CPU' if self.device.currentData()=='cuda' else 'CPU'
+        self.model_status.setText(f'{"模型就绪" if ready else "模型缺失或下载未完成"} · {size/1024**3:.2f} GB\n{device} · 内存估计 {memory}')
 
     def busy(self, value):
-        for widget in (self.add_button,self.folder_button,self.remove_button,self.clear_button,self.model,self.language,self.quality,self.encoding,self.threads,self.beam,self.conflict,self.output,self.output_button,self.preserve,self.recursive,self.filter,self.start_button,self.save_button,self.retranslate_button,self.load_review_button):
+        for widget in (self.add_button,self.folder_button,self.remove_button,self.clear_button,self.model,self.device,self.language,self.quality,self.encoding,self.threads,self.beam,self.reset_parameters,self.conflict,self.output,self.output_button,self.preserve,self.recursive,self.filter,self.start_button,self.save_button,self.retranslate_button,self.load_review_button,self.open_file_button,self.open_result_button,self.save_file_button,self.save_file_as_button):
             widget.setEnabled(not value)
         self.pause_button.setEnabled(value)
         self.cancel_button.setEnabled(value)
         self.review.setEnabled(not value)
+        self.file_stack.setEnabled(not value)
 
     def choose_output(self):
         path = QFileDialog.getExistingDirectory(self,'选择输出目录',self.output.text())
@@ -413,7 +461,82 @@ class MainWindow(QMainWindow):
         self.persist()
 
     def discard_edits(self):
-        return not self.review_dirty or QMessageBox.question(self,'尚有未保存修改','放弃当前校对修改并继续？')==QMessageBox.StandardButton.Yes
+        return not (self.review_dirty or self.file_dirty) or QMessageBox.question(self,'尚有未保存修改','放弃当前未保存修改并继续？')==QMessageBox.StandardButton.Yes
+
+    def file_edited(self, *args):
+        if self.editable_file is not None:
+            self.file_dirty = True
+
+    def open_translated_file(self):
+        path,_ = QFileDialog.getOpenFileName(self,'打开已翻译文件',str(self.output.text() or default_output()),'可编辑文件 ('+' '.join('*'+s for s in sorted(EDITABLE))+')')
+        if path:
+            self.load_translated_file(path)
+
+    def open_selected_output(self):
+        result = self.results.get(self.files.currentRow(),{})
+        path = result.get('output')
+        if not path:
+            QMessageBox.information(self,'未选择结果','请在任务列表中选择一个已完成文件。')
+            return
+        self.load_translated_file(path)
+
+    def load_translated_file(self, path):
+        if not self.discard_edits():
+            return
+        try:
+            loaded = EditableFile(path)
+            if self.review_dirty and self.review_result:
+                self.fill_review(self.review_result)
+            self.editable_file = None
+            if loaded.structured:
+                self.file_table.blockSignals(True)
+                self.file_table.setRowCount(len(loaded.document.units))
+                for row,unit in enumerate(loaded.document.units):
+                    self.file_table.setItem(row,0,item(unit.label))
+                    self.file_table.setItem(row,1,item(unit.source,True))
+                    self.file_table.setRowHeight(row,58)
+                self.file_table.blockSignals(False)
+                self.file_stack.setCurrentIndex(1)
+            else:
+                self.file_text.setPlainText(loaded.text)
+                self.file_stack.setCurrentIndex(0)
+            self.editable_file = loaded
+            self.file_dirty = False
+            self.editor_label.setText(str(loaded.path)+'\n字幕请只修改正文，时间轴与控制标记受保护。DOCX 保留表格与基本格式；保存前自动创建 .bak 备份。')
+            self.tabs.setCurrentIndex(3)
+        except Exception as exc:
+            QMessageBox.warning(self,'无法打开文件',str(exc))
+
+    def save_translated_file(self, save_as=False):
+        if not self.editable_file:
+            return
+        try:
+            current = self.editable_file
+            destination = None
+            if save_as:
+                destination,_ = QFileDialog.getSaveFileName(self,'另存为译文',str(current.path.with_name(current.path.stem+'.edited'+current.path.suffix)),f'文件 (*{current.path.suffix})')
+                if not destination:
+                    return
+            target = Path(destination).resolve() if destination else current.path
+            if any(target==Path(entry.path).resolve() for entry in self.inputs):
+                raise ValueError('当前任务的输入原文件受保护，请另存为其他文件名。')
+            value = [self.file_table.item(r,1).text() for r in range(self.file_table.rowCount())] if current.structured else self.file_text.toPlainText()
+            backup = current.save(value,destination,allow_replace=bool(destination))
+            self.file_dirty = False
+            if self.review_result and Path(self.review_result['output']).resolve()==current.path:
+                updated=read_json(current.path.with_name(current.path.name+'.review.json'),{})
+                if updated.get('rows'):
+                    self.fill_review(updated)
+                else:
+                    self.review_result=None
+                    self.review.setRowCount(0)
+                    self.review_dirty=False
+                self.tabs.setCurrentIndex(3)
+            self.editor_label.setText(str(current.path)+'\n已保存'+(f' · 备份：{backup.name}' if backup else ''))
+            self.statusBar().showMessage('译文文件已保存',5000)
+            self.log.appendPlainText('文件编辑已保存：'+str(current.path))
+        except Exception as exc:
+            QMessageBox.warning(self,'保存文件失败',str(exc))
 
     def show_review(self):
         if self.worker or not self.discard_edits():

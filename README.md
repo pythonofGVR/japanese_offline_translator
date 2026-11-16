@@ -1,11 +1,31 @@
-# 日文离线翻译器
+﻿# 日文离线翻译器 v1.1.0
 
-Windows x64 / CPU 离线字幕与文档批量翻译。支持日文 → 简体中文、繁体中文、英文。
+Windows x64 本地日文翻译：CPU 或可选 NVIDIA CUDA GPU，GPU 不可用自动回退 CPU。运行时不联网，不需要 Python、CUDA Toolkit、账户或 API Key。
 
-打开便携目录中的 `JapaneseTranslator.exe`，添加文件或文件夹，选择模型并开始翻译。双击已完成文件进入可编辑的原译对照。详见 [使用指南](USER_GUIDE.md)。
+## 下载完整应用
 
-支持 SRT、ASS、SSA、VTT、LRC、TXT、Markdown、DOCX 和可提取文本的 PDF。原始输入不修改；结果按语言后缀命名，默认冲突自动编号。两档 MIT 许可 M2M100 INT8 模型随最终 ZIP 提供，运行时不调用网络和外部 API。
+[打开 v1.1.0 完整离线发行页](https://github.com/pythonofGVR/japanese_offline_translator/releases/tag/v1.1.0)
 
-开发：Python 3.13 x64，项目 `.venv`，依赖固定在 `requirements.lock.txt`。`python scripts/prepare_models.py` 准备并验证模型；`python -m pytest -q` 测试；`python scripts/build.py` 生成带模型与许可的 onedir 和 ZIP。构建会执行打包后 EXE 的真实翻译与离线测试。
+在 Assets 中下载 JapaneseTranslatorSetup.exe、所有 JapaneseTranslatorSetup-*.bin 和 SHA256SUMS.txt，放在同一个文件夹，再双击 EXE 安装。数据文件包含两个模型和 CPU/GPU 运行库，不能遗漏。GitHub 默认的 Source code ZIP 仅供开发，不是可直接运行的软件。
 
-验收证据见 `reports/ACCEPTANCE.md`、`reports/source-offline.json`、`reports/frozen-offline.json`。完整需求保存在 `docs/REQUIREMENTS.md`。跨主机、旧 CPU 和干净 Windows 环境必须另行验证，不能由本机打包成功推定。
+仓库当前公开，可从 Release 下载完整文件；下载完整后可复制到另一台断网 Windows 电脑安装，无需再次联网。详见 docs/INSTALL_OFFLINE.md。
+
+## 功能
+
+- 日文到简体中文、繁体中文、英文；M2M100 418M / 1.2B INT8 双模型。
+- 批量文件、递归文件夹、SRT/ASS/SSA/VTT/LRC、TXT/Markdown/DOCX、可提取文本的 PDF。
+- 保留原文，输出自动编号，字幕结构校验；缓存、暂停/继续、取消、任务恢复。
+- 异常质量检测和条件重译、人工对照校对；独立译文文件编辑与自动备份。
+- CPU 线程数 1–min(32,逻辑处理器数)，默认 min(4,上限)；搜索宽度 1–10，默认 3；可恢复默认参数。
+
+机器翻译仍可能误译。规则检测不能代替语义校对，尚未实现 OCR 与跨字幕上下文推理。
+
+## 开发与构建
+
+Python 3.13 x64；新建 .venv，安装 requirements.lock.txt 后 pip install -e . --no-build-isolation。
+运行 python scripts/prepare_models.py 准备并核验模型，python -m jot 启动，python -m pytest -q 测试。
+使用 Inno Setup 6.4.3，将 ISCC.exe 放到 tools/inno6/。python scripts/build.py 会构建完整 CPU/GPU 运行目录、验证冻结 EXE 的实际 CPU/GPU/自动回退及文件编辑，再生成分卷离线安装包并实际安装验证。
+
+源码以 Git 分支与版本标签保留；大模型和二进制通过 GitHub Release 分发。最终清理不删除已有用户字幕或本机配置缓存。软件许可详见 LICENSES.md，验收证据见 reports/v1.1-*.json、reports/v1.1-tests.xml。
+
+本机清理后的精简布局为 JapaneseTranslator（可直接运行）、OfflineInstaller（跨机离线安装文件）和必要的 Git 版本元数据。需要继续开发时，在项目根目录运行 git sparse-checkout disable 恢复源码，再重新创建开发虚拟环境。原有字幕与用户提示文档保留。

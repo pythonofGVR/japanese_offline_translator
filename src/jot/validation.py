@@ -86,10 +86,17 @@ def main():
     parser.add_argument('--work-dir')
     parser.add_argument('--skip-hashes',action='store_true')
     parser.add_argument('--models',nargs='+',choices=list(MODEL_NAMES),default=list(MODEL_NAMES))
+    parser.add_argument('--device',choices=['cpu','cuda'],default='cpu')
+    parser.add_argument('--require-device',choices=['cpu','cuda'])
+    parser.add_argument('--simulate-no-gpu',action='store_true')
     args=parser.parse_args()
     root=app_root()
     result={'status':'FAIL','platform':platform.platform(),'cpu':platform.processor(),'logical_cpus':os.cpu_count(),'offline_scope':'Python socket connect/connect_ex/create_connection/getaddrinfo disabled before model loading; native library not firewall-blocked','models':{},'tests':[]}
     deny_network()
+    if args.simulate_no_gpu:
+        import ctranslate2
+        ctranslate2.get_cuda_device_count=lambda:0
+        result['gpu_absence_simulated']=True
     import psutil
     process=psutil.Process()
     result['memory_total_bytes']=psutil.virtual_memory().total
@@ -109,7 +116,7 @@ def main():
         assert load_document(source_dir/'sample.pdf').units[0].source=='今日は晴れです。'
         engine=Engine(cache_path=work/'validation.sqlite3')
         for key in args.models:
-            engine.load(key,4)
+            engine.load(key,4,args.device)
             model=result['models'].setdefault(key,{})
             model['load_seconds']=engine.load_seconds
             peak[0]=process.memory_info().rss
@@ -122,7 +129,7 @@ def main():
             assert any(t!=s for t,s in zip(target,texts))
             model['peak_rss_bytes']=peak[0]
             files,skipped=scan(source_dir,True,work/'output')
-            settings=Settings(model=key,output=str(work/'output'/key))
+            settings=Settings(model=key,output=str(work/'output'/key),device=args.device)
             for entry in files:
                 original=Path(entry.path).read_bytes()
                 start=time.perf_counter()
@@ -148,11 +155,34 @@ def main():
                 value=engine.translate(['今日は晴れです。'],language=language,force=True)[0][0]
                 assert value.strip()
                 model[language]=value
+            model['device']=engine.device
+            model['compute_type']=engine.compute_type
+            model['fallback_reason']=engine.fallback_reason
+            if args.require_device:
+                assert engine.device==args.require_device,engine.fallback_reason
         # Switching back must unload the larger model and reload the smaller one.
         if len(args.models)>1:
-            engine.load('fast',4)
+            engine.load('fast',4,args.device)
             assert engine.key=='fast'
             result['tests'].append({'case':'model switch quality -> fast','status':'PASS'})
+        from .editor import EditableFile
+        translated=engine.translate([SAMPLES[0][0]],force=True)[0][0]
+        standalone=work/'standalone-translation.txt'
+        standalone.write_text(translated,encoding='utf-8')
+        editor=EditableFile(standalone)
+        backup=editor.save(translated+' 已编辑。')
+        assert backup and backup.read_text(encoding='utf-8')==translated
+        assert standalone.read_text(encoding='utf-8').endswith('已编辑。')
+        result['tests'].append({'case':'standalone translated text editing and backup','status':'PASS'})
+        from docx import Document
+        word=work/'standalone-translation.docx'
+        doc=Document();doc.add_paragraph().add_run(translated).bold=True;doc.save(word)
+        editor=EditableFile(word)
+        editor.save([translated+' 已编辑。'])
+        checked=Document(word)
+        assert checked.paragraphs[0].runs[0].bold
+        assert checked.paragraphs[0].text.endswith('已编辑。')
+        result['tests'].append({'case':'standalone translated DOCX editing preserving format','status':'PASS'})
         try:
             socket.create_connection(('example.com',443))
             raise AssertionError('network unexpectedly enabled')

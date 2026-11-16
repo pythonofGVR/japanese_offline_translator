@@ -10,6 +10,8 @@ import time
 from .formats import JAPANESE, text_parts
 from .paths import app_root, user_data
 from .quality import warnings, score, safe_cleanup
+from .parameters import DEFAULT_THREADS, THREAD_MIN, THREAD_MAX, BEAM_MIN, BEAM_MAX, validate_integer
+from .devices import enable_cuda_libraries
 
 MODEL_NAMES = {'fast': 'M2M100 418M · INT8', 'quality': 'M2M100 1.2B · INT8'}
 
@@ -28,6 +30,8 @@ class Engine:
         self.db = sqlite3.connect(cache_path or user_data() / 'translations.sqlite3')
         self.db.execute('CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT NOT NULL)')
         self.load_seconds = 0
+        self.device, self.compute_type, self.requested_device = 'cpu', 'int8', 'cpu'
+        self.fallback_reason = ''
 
     def close(self):
         self.unload()
@@ -39,8 +43,11 @@ class Engine:
         self.key = None
         gc.collect()
 
-    def load(self, key, threads=4):
-        if self.key == key and self.threads == threads:
+    def load(self, key, threads=DEFAULT_THREADS, device='cpu'):
+        validate_integer(threads, THREAD_MIN, THREAD_MAX, '线程数')
+        if device not in ('cpu','cuda'):
+            raise ValueError('无效运行设备')
+        if self.key == key and self.threads == threads and self.requested_device == device:
             return
         self.unload()
         folder = self.root / 'models' / key
@@ -56,26 +63,52 @@ class Engine:
             # Windows native fopen APIs in SentencePiece do not reliably accept
             # Unicode paths. Python opens the file using the wide-character API.
             self.sp = sentencepiece.SentencePieceProcessor(model_proto=(folder / 'sentencepiece.bpe.model').read_bytes())
+            files = None
+            identifier = str(folder)
             if os.name == 'nt' and not str(folder).isascii():
                 names = ('model.bin','config.json','shared_vocabulary.txt','shared_vocabulary.json','source_vocabulary.json','target_vocabulary.json')
                 files = {name:(folder/name).read_bytes() for name in names if (folder/name).is_file()}
-                self.translator = ctranslate2.Translator(f'jot-{key}-{self.revision}', device='cpu', compute_type='int8', inter_threads=1, intra_threads=threads, files=files)
-            else:
-                self.translator = ctranslate2.Translator(str(folder), device='cpu', compute_type='int8', inter_threads=1, intra_threads=threads)
+                identifier = f'jot-{key}-{self.revision}'
+            self.device, self.compute_type, self.fallback_reason = 'cpu', 'int8', ''
+            if device == 'cuda':
+                try:
+                    if ctranslate2.get_cuda_device_count() < 1:
+                        raise RuntimeError('没有可用的 NVIDIA CUDA GPU')
+                    enable_cuda_libraries(self.root)
+                    supported = ctranslate2.get_supported_compute_types('cuda')
+                    compute = next(t for t in ('int8_float16','float16','float32') if t in supported)
+                    self.translator = ctranslate2.Translator(identifier, device='cuda', compute_type=compute, inter_threads=1, intra_threads=threads, files=files)
+                    self.device, self.compute_type = 'cuda', compute
+                except Exception as exc:
+                    self.translator = None
+                    gc.collect()
+                    self.fallback_reason = f'GPU 不可用，已回退 CPU：{exc}'
+            if self.translator is None:
+                self.translator = ctranslate2.Translator(identifier, device='cpu', compute_type='int8', inter_threads=1, intra_threads=threads, files=files)
         except Exception as exc:
             self.unload()
             raise RuntimeError(f'模型加载失败：{exc}。请检查可用内存、模型完整性和 CPU 指令集。') from exc
-        self.key, self.threads = key, threads
+        self.key, self.threads, self.requested_device = key, threads, device
         self.load_seconds = time.perf_counter() - start
 
     def infer(self, texts, language='zh-CN', beam=3, retry=0):
+        validate_integer(beam, BEAM_MIN, BEAM_MAX, '搜索宽度')
         if not self.translator:
             raise RuntimeError('模型尚未加载')
         target = '__en__' if language == 'en' else '__zh__'
         tokenized = [['__ja__'] + self.sp.encode(t, out_type=str) + ['</s>'] for t in texts]
         if any(len(t) > 480 for t in tokenized):
             raise ValueError('输入超过安全 token 上限')
-        results = self.translator.translate_batch(tokenized, target_prefix=[[target]] * len(texts), beam_size=beam, max_decoding_length=480, repetition_penalty=1.08 if retry else 1.0, no_repeat_ngram_size=4 if retry else 0, batch_type='tokens', max_batch_size=1200)
+        try:
+            results = self.translator.translate_batch(tokenized, target_prefix=[[target]] * len(texts), beam_size=beam, max_decoding_length=480, repetition_penalty=1.08 if retry else 1.0, no_repeat_ngram_size=4 if retry else 0, batch_type='tokens', max_batch_size=1200)
+        except RuntimeError as exc:
+            if self.device != 'cuda':
+                raise
+            key, threads = self.key, self.threads
+            self.load(key, threads, 'cpu')
+            self.requested_device = 'cuda'
+            self.fallback_reason = f'GPU 推理失败，已回退 CPU：{exc}'
+            return self.infer(texts, language, beam, retry)
         output = []
         if language != 'en':
             from opencc import OpenCC
@@ -87,6 +120,7 @@ class Engine:
         return output
 
     def translate(self, texts, language='zh-CN', quality='auto', beam=3, markdown=False, boundary=lambda: None, progress=lambda a,b: None, force=False):
+        validate_integer(beam, BEAM_MIN, BEAM_MAX, '搜索宽度')
         # Split on explicit formatting and whitespace. Every chunk is independently
         # aligned, so MT cannot merge subtitles or corrupt control information.
         all_parts, jobs = [], []
@@ -132,7 +166,7 @@ class Engine:
         cache_keys = {}
         pending = {}
         for i, offset, source in jobs:
-            settings = [self.key, self.revision, language, quality, beam, source, 'pipeline-v2']
+            settings = [self.key, self.revision, self.device, self.compute_type, language, quality, beam, source, 'pipeline-v3']
             key = hashlib.sha256(json.dumps(settings, ensure_ascii=False).encode()).hexdigest()
             cache_keys[source] = key
             row = None if force else self.db.execute('SELECT value FROM cache WHERE key=?', (key,)).fetchone()
@@ -163,7 +197,10 @@ class Engine:
                 for i, offset in pending[source]:
                     all_parts[i][offset] = chosen[n]
                     done += 1
-                self.db.execute('INSERT OR REPLACE INTO cache VALUES (?,?)', (cache_keys[source], chosen[n]))
+                # A failed GPU inference may have switched to CPU within this batch.
+                settings = [self.key, self.revision, self.device, self.compute_type, language, quality, beam, source, 'pipeline-v3']
+                actual_key = hashlib.sha256(json.dumps(settings, ensure_ascii=False).encode()).hexdigest()
+                self.db.execute('INSERT OR REPLACE INTO cache VALUES (?,?)', (actual_key, chosen[n]))
             self.db.commit()
             progress(done, total)
         final = [''.join(parts) for parts in all_parts]

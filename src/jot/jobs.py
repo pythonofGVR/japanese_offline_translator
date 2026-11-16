@@ -8,6 +8,7 @@ import time
 
 from .formats import SUPPORTED, load_document
 from .paths import atomic_write, default_output, read_json, write_json
+from .parameters import THREAD_MIN, THREAD_MAX, DEFAULT_THREADS, BEAM_MIN, BEAM_MAX, DEFAULT_BEAM, validate_integer
 
 @dataclass
 class InputFile:
@@ -23,8 +24,15 @@ class Settings:
     preserve: bool = True
     conflict: str = 'rename'
     encoding: str = 'auto'
-    threads: int = 4
-    beam: int = 3
+    threads: int = DEFAULT_THREADS
+    beam: int = DEFAULT_BEAM
+    device: str = 'cpu'
+
+    def __post_init__(self):
+        validate_integer(self.threads, THREAD_MIN, THREAD_MAX, '线程数')
+        validate_integer(self.beam, BEAM_MIN, BEAM_MAX, '搜索宽度')
+        if self.device not in ('cpu','cuda'):
+            raise ValueError('设备必须是 CPU 或 GPU 优先')
 
 def generated(path):
     return bool(re.search(r'\.(?:zh-CN|zh-TW|en)(?:\.\d+)?\.[^.]+$', path.name, re.I))
@@ -122,6 +130,7 @@ def translate_file(item, settings, engine, control, progress=lambda a,b: None):
         if source_hash(source) != digest:
             raise ValueError('翻译期间原文已变更，已停止保存；请重新导入')
         result = dict(status='已完成', source=str(source), source_hash=digest, output=str(output), settings=asdict(settings), rows=[dict(source=u.source, label=u.label, initial=a, target=b, warnings=f) for u,a,b,f in zip(doc.units, initial, target, flags)], warnings=doc.warnings, completed=time.time())
+        result['runtime'] = dict(device=engine.device, compute_type=engine.compute_type, fallback_reason=engine.fallback_reason)
         # Write the review sidecar before final output; neither modifies the input.
         write_json(output.with_name(output.name + '.review.json'), result, replace=False)
         sidecar_created = True

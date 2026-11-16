@@ -23,6 +23,7 @@ def main():
     original=source.read_bytes()
     app=QApplication([]);app.setStyle('Fusion');app.setStyleSheet(STYLE)
     window=MainWindow();window.show()
+    window.device.setCurrentIndex(1)
     window.output.setText(str(work/'output'))
     window.add_inputs([InputFile(str(source))])
     heartbeat=[0]
@@ -39,6 +40,7 @@ def main():
         QTest.qWait(30)
     assert window.worker is None,'worker did not finish'
     assert window.states[0]=='已完成',window.log.toPlainText()
+    assert window.results[0]['runtime']['device']=='cuda',window.log.toPlainText()
     assert heartbeat[0]>=5,'GUI event loop did not remain responsive'
     window.files.setCurrentCell(0,0);window.show_review()
     assert window.review.rowCount()==2
@@ -56,11 +58,20 @@ def main():
     QTest.mouseClick(window.save_button,Qt.MouseButton.LeftButton)
     assert source.read_bytes()==original
     window.grab().save(str(ROOT/'reports/gui-review.png'))
+    window.open_selected_output()
+    assert window.editable_file is not None
+    old=window.file_text.toPlainText()
+    target=window.review_result['rows'][0]['target']
+    window.file_text.setPlainText(old.replace(target,target+' 已校对。',1))
+    QTest.mouseClick(window.save_file_button,Qt.MouseButton.LeftButton)
+    assert not window.file_dirty and '已校对' in output.read_text(encoding='utf-8')
+    assert list(output.parent.glob(output.name+'.*.bak'))
+    window.grab().save(str(ROOT/'reports/v1.1-editor.png'))
     window.tabs.setCurrentIndex(0)
     window.grab().save(str(ROOT/'reports/gui-native.png'))
     window.resize(1000,700);app.processEvents()
     window.grab().save(str(ROOT/'reports/gui-small.png'))
-    report={'status':'PASS','real_worker':True,'pause_resume':True,'event_loop_heartbeats':heartbeat[0],'manual_edit_save':True,'single_row_real_retranslation':True,'source_unchanged':True,'output':str(output)}
+    report={'status':'PASS','device':'cuda','standalone_file_edit':True,'automatic_backup':True,'real_worker':True,'pause_resume':True,'event_loop_heartbeats':heartbeat[0],'manual_edit_save':True,'single_row_real_retranslation':True,'source_unchanged':True,'output':str(output)}
     (ROOT/'reports/gui-e2e.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
     window.close()
     print('Native GUI end-to-end PASS')
