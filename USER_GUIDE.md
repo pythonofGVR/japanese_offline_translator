@@ -37,3 +37,5 @@ Windows 10/11 x64；CTranslate2 官方预编译 CPU 库至少需要 SSE 4.1，�
 构建前联网运行 `python scripts/prepare_models.py`，必要时只在终端设置代理；运行时不需要网络。
 执行 `python -m jot` 启动源码版；`python -m pytest -q` 测试；`scripts/Build.ps1` 构建验证与 ZIP。
 安装包可用 Inno Setup 编译 `scripts/installer.iss`。完整便携包不依赖安装包。
+
+本次发行采用已公开转换的固定版本 fairseq INT8 权重，下载后核对上游 LFS SHA256，并实际加载两个模型；本机没有重新执行权重转换。若需从官方 Transformers 权重重新转换，在另一个虚拟环境安装 `scripts/conversion-requirements.txt`，执行 `python scripts/convert_models.py fast --output converted_models/fast`（或 quality）。该替代转换脚本未在本次发行执行，不能替代重新运行真实模型验收；建议有至少 16 GB 可用内存。转换输出不会覆盖内置模型。

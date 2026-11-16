@@ -18,6 +18,7 @@
 |NumPy|BSD-3-Clause，另有随包组件许可|保留包内全部许可|
 |Python|PSF / 历史许可|保留 Python 许可|
 |PyInstaller|GPL-2.0-or-later + bootloader exception|例外允许分发本应用，保留许可；构建工具不是运行时服务|
+|Inno Setup 6.4.3|Inno Setup License（允许商业使用与分发，保留声明）|仅用于编译可选安装包；许可全文随包提供|
 
 精确版本与原始许可证文件在便携包 licenses/ 内。构建脚本自动从安装包元数据复制声明，不把本表代替全文。
 
@@ -29,6 +30,7 @@ Qt / PySide6 对应版本与来源：
 - https://download.qt.io/official_releases/qt/ （对应 Qt 版本源码与构建资料）
 - https://code.qt.io/cgit/pyside/pyside-setup.git/
 - https://code.qt.io/cgit/qt/qtbase.git/
+- 对应本次版本的源码：https://github.com/qt/qtbase/tree/v6.12.0 ，https://github.com/qt/pyside-pyside-setup/tree/v6.12.0
 - https://www.gnu.org/licenses/lgpl-3.0.html
 - https://doc.qt.io/qt-6/lgpl.html
 

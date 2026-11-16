@@ -6,8 +6,8 @@
 *.pdf binary
 *.docx binary
 *.png binary
-*.srt -text
-*.ass -text
-*.ssa -text
-*.vtt -text
-*.lrc -text
+*.srt -text whitespace=cr-at-eol
+*.ass -text whitespace=cr-at-eol
+*.ssa -text whitespace=cr-at-eol
+*.vtt -text whitespace=cr-at-eol
+*.lrc -text whitespace=cr-at-eol

@@ -1,0 +1,49 @@
+{
+  "artifacts": [
+    {
+      "file": "JapaneseTranslatorPortable.zip",
+      "bytes": 1715235377,
+      "sha256": "ef481c4b779822725e41377b6db54c43e833db7952d5dd38e660d7c0d8ab7c74"
+    },
+    {
+      "file": "JapaneseTranslatorSetup.exe",
+      "bytes": 1708005962,
+      "sha256": "f7793405f8f17ae7aecbca8271fd18a5cdcb79182130ed814d9df42796767562"
+    },
+    {
+      "file": "JapaneseTranslator/JapaneseTranslator.exe",
+      "bytes": 6307977,
+      "sha256": "deb853a5a20204c04fdaeeec813747cd35888b05dee7347dc1e0931e21390373"
+    }
+  ],
+  "evidence": {
+    "source-offline": {
+      "status": "PASS",
+      "checks": 24
+    },
+    "frozen-offline": {
+      "status": "PASS",
+      "checks": 24
+    },
+    "relocated-offline": {
+      "status": "PASS",
+      "checks": 24
+    },
+    "installed-offline": {
+      "status": "PASS",
+      "checks": 24
+    },
+    "gui-e2e": {
+      "status": "PASS",
+      "checks": 0
+    },
+    "stress": {
+      "status": "PASS",
+      "checks": 0
+    }
+  },
+  "unit_tests": 32,
+  "installer_compiler": "Inno Setup 6.4.3",
+  "repository": "https://github.com/pythonofGVR/japanese_offline_translator",
+  "branch": "codex/offline-translator"
+}
