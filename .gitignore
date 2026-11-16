@@ -13,3 +13,9 @@ models/**
 !.env.example
 .impeccable/
 reports/local/
+*.egg-info/
+tools/
+reports/gui-initial.png
+reports/hardware-support.html
+reports/quality-first.json
+reports/quality-offline.json

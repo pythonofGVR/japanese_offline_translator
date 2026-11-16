@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "japanese-offline-translator"
+version = "1.0.0"
+requires-python = ">=3.13,<3.14"
+description = "Windows CPU offline Japanese subtitle and document translation"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = ["integration: requires real local translation models"]

@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "real_worker": true,
+  "pause_resume": true,
+  "event_loop_heartbeats": 1510,
+  "manual_edit_save": true,
+  "single_row_real_retranslation": true,
+  "source_unchanged": true,
+  "output": "C:\\Users\\11972\\AppData\\Local\\Temp\\jot-gui-files-ldnkr10z\\output\\sample.zh-CN.srt"
+}

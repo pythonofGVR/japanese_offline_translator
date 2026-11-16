@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "cues": 10000,
+  "seconds": 0.668543600000703,
+  "cache_hit_avoids_infer": true,
+  "language_cache_isolation": true,
+  "cancel_no_final_or_temp_output": true,
+  "batch_error_isolation": true,
+  "meaning_accuracy": "not assessed by this stress test; repeated synthetic source text"
+}
