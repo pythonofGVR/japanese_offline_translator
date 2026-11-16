@@ -2,7 +2,7 @@
   "id": 447437886,
   "repository": "pythonofGVR/japanese_offline_translator",
   "tag": "v1.1.0",
-  "draft": true,
+  "draft": false,
   "uploaded": [
     {
       "name": "INSTALL_OFFLINE.md",
@@ -40,5 +40,7 @@
       "bytes": 600000000
     }
   ],
-  "download_hashes_verified": true
+  "download_hashes_verified": true,
+  "public_url": "https://github.com/pythonofGVR/japanese_offline_translator/releases/tag/v1.1.0",
+  "public_without_authentication": true
 }
