@@ -29,3 +29,11 @@ Python 3.13 x64；新建 .venv，安装 requirements.lock.txt 后 pip install -e
 源码以 Git 分支与版本标签保留；大模型和二进制通过 GitHub Release 分发。最终清理不删除已有用户字幕或本机配置缓存。软件许可详见 LICENSES.md，验收证据见 reports/v1.1-*.json、reports/v1.1-tests.xml。
 
 本机清理后的精简布局为 JapaneseTranslator（可直接运行）、OfflineInstaller（跨机离线安装文件）和必要的 Git 版本元数据。需要继续开发时，在项目根目录运行 git sparse-checkout disable 恢复源码，再重新创建开发虚拟环境。原有字幕与用户提示文档保留。
+
+## 本机精简运行布局（2026-11-17）
+
+- `JapaneseTranslator/JapaneseTranslator.exe`：可直接启动；完整模型与 CPU/GPU 运行库均在此目录。
+- `OfflineInstaller/`：安装 EXE、全部四个 BIN 数据卷、安装说明与 SHA256；跨机使用时全部一起复制。
+- 开发环境、构建工具、旧包、重复模型和测试产物已清理，源码在 Git 历史与 GitHub 中保留，可用 `git sparse-checkout disable` 恢复。
+- 清理后已在没有项目虚拟环境的情况下，再次通过 CPU、GPU、无 GPU 回退三组运行检查，每组 26 项。
+- 原有字幕、用户提示文档、用户配置与翻译结果未删除。
