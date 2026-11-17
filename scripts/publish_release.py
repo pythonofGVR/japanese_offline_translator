@@ -14,8 +14,9 @@ def main():
     parser.add_argument('--gh',required=True)
     parser.add_argument('--repo',default='pythonofGVR/japanese_offline_translator')
     parser.add_argument('--tag',default='v1.1.1')
+    parser.add_argument('--assets',type=Path,default=ROOT/'dist/release-v1.1.1')
     args=parser.parse_args()
-    assets=ROOT/'dist/release-v1.1.1'
+    assets=args.assets.resolve()
     receipt_path=ROOT/'reports/v1.1.1-release-upload.json'
     def gh(*arguments,capture=False,check=True):
         for attempt in range(3 if capture else 1):

@@ -1,0 +1,73 @@
+{
+  "version": "1.1.1",
+  "application_source_commit": "bdf6c8e710bd2beeffe20a3d1bb6118a45f172e6",
+  "application_exe_sha256": "b88257f5d2c8036f25f2779634a52dca33e0cfcdfff5555d7173039806dee3e3",
+  "source_sha256": {
+    "src/jot/__init__.py": "cb3535da87ee03b874d733e64da589848eecfac8bd55fe16ae52ad45cff87ed3",
+    "src/jot/__main__.py": "71dc6954bc9bf83c898b1616e26b366009d104b59d8a39e7b01a885b2c6a9fc6",
+    "src/jot/devices.py": "9069c76548bf3c5d446789e2e1594b8d9d0b34bad0a2ee3d8fb09cee047e185b",
+    "src/jot/editor.py": "cdb677b0122d8cb2b8e53bf0187ca388832464d383fd73c2c2292b694ba28aad",
+    "src/jot/engine.py": "580ebd7dec721a9450f1dbbd1a4cbd0a2df22d65e0ecf4a2c8271f733a660352",
+    "src/jot/formats.py": "f7b2d28b9a886e169564520c140dbc835075626acc047c561e88ac457dfc8d65",
+    "src/jot/gui.py": "189717fbeeb3d3b9d021bb4b53e3f7e6994e362313f5a4062633a310bec16790",
+    "src/jot/jobs.py": "96caa1cf28d54785b8d4740a9fb942c2995ccf495c7a11d50bfe1d3c7e042b5f",
+    "src/jot/parameters.py": "ad9203eef2e71361d3d0518b9324b67f4539b6e1a82a14cbdcce875ec7ac7df7",
+    "src/jot/paths.py": "35ebae0ebd190faad3aee94ab4207a4b904c9e502a6df0c6d8b6eac34112ec0c",
+    "src/jot/quality.py": "bf89c1e750b515b3fb8efe9cb6f51648a9f4c9b99c60f3e44e02d90c3195ff61",
+    "src/jot/reviews.py": "37e54dcdeded2881c431e6db07e15f758633ec9ce42e26c1df60b6df48181ecb",
+    "src/jot/validation.py": "b771a91e2ca588823f88c5476b83666abf5e906e93d3282df143f1fe3c639162"
+  },
+  "models": {
+    "fast": {
+      "repository": "JustFrederik/m2m_100_418m_ct2_int8",
+      "revision": "1aeed44db4dd61a486bba44acf54c76507082a2c",
+      "upstream": "facebook/m2m100_418M",
+      "upstream_revision": "55c2e61bbf05dfb8d7abccdc3fae6fc8512fd636",
+      "quantization": "int8",
+      "license": "MIT",
+      "sha256": {
+        "config.json": "531f7f8d8bf8b73a1580b73c04b58bf134ac490284f4f7af6c20ad238499ae37",
+        "LICENSE": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
+        "model.bin": "6c8ef4e814a02d5947ab80710f93f3d4e776bf4b668ab3bb7996ff050b69d111",
+        "README.md": "f40ae40395c600985618b5dd658e61762dd236a95b89cc5fcddb07e021053ec2",
+        "sentencepiece.bpe.model": "d8f7c76ed2a5e0822be39f0a4f95a55eb19c78f4593ce609e2edbc2aea4d380a",
+        "shared_vocabulary.txt": "bd440aa21b8ca3453fc792a0018a1f3fe68b3464aadddd4d16a4b72f73c86d8c",
+        "UPSTREAM_MODEL_CARD.md": "1fd660f130aedc5ecf1796b47ab47d43d3c4b36541f5387b7adb3df75cb5dfdb"
+      }
+    },
+    "quality": {
+      "repository": "JustFrederik/m2m_100_1.2b_ct2_int8",
+      "revision": "0e07f3608b9be1a81df0813b53c3e338ecc3890a",
+      "upstream": "facebook/m2m100_1.2B",
+      "upstream_revision": "7b36184180524c1a1bbfa37f120a608046250b98",
+      "quantization": "int8",
+      "license": "MIT",
+      "sha256": {
+        "config.json": "531f7f8d8bf8b73a1580b73c04b58bf134ac490284f4f7af6c20ad238499ae37",
+        "LICENSE": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85",
+        "model.bin": "d3ae303772bce9b72351f94b9a9a2e588bb911293e69db200ca0920abfd8fabd",
+        "README.md": "63a81d64dca587d4e0b670d5870925c173bf17193aed72d29ad94f09a977f916",
+        "sentencepiece.bpe.model": "d8f7c76ed2a5e0822be39f0a4f95a55eb19c78f4593ce609e2edbc2aea4d380a",
+        "shared_vocabulary.txt": "bd440aa21b8ca3453fc792a0018a1f3fe68b3464aadddd4d16a4b72f73c86d8c",
+        "UPSTREAM_MODEL_CARD.md": "f4358f5d8ce691958a36ea897b7360c6ec8039dc5c275331d6953a2a8338d30f"
+      }
+    }
+  },
+  "cuda": {
+    "package": "nvidia-cublas-cu12",
+    "version": "12.6.4.1",
+    "sha256": {
+      "cublas64_12.dll": "01d8172b25d8e2d2cb6a276e76e719f5908c6124f484c8c8ca310fbe7b6634f3",
+      "cublasLt64_12.dll": "0d59d264782cec2782b9ac72483e53c9ba485a9d3a1e19b34071a17b8152102e"
+    }
+  },
+  "compiler": {
+    "version": "Inno Setup 6.4.3",
+    "official_download": "https://github.com/jrsoftware/issrc/releases/download/is-6_4_3/innosetup-6.4.3.exe",
+    "authenticode_status": "Valid",
+    "signer": "Pyrsys B.V.",
+    "sha256": "f3c42116542c4cc57263c5ba6c4feabfc49fe771f2f98a79d2f7628b8762723b"
+  },
+  "dependency_lock_sha256": "33b5c7d9aed9b2352b75d241b0bc66850eb56f087065928e892fe466d0af9cff",
+  "python": "3.13.16 (tags/v3.13.16:cbc944f, Sep 30 2026, 19:17:50) [MSC v.1944 64 bit (AMD64)]"
+}

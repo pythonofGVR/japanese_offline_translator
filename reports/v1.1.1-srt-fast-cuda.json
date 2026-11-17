@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "model": "fast",
+  "device": "cuda",
+  "samples": [
+    {
+      "sample": 1,
+      "sha256": "bda782ba8569e7682c4062677d23b1054984e7f3a936b57e3c6aa654dd0cbbd2",
+      "cues": 846,
+      "status": "PASS",
+      "fallback_cues": 12,
+      "translated_or_non_japanese_cues": 834,
+      "nonempty": true,
+      "timings_and_count_preserved": true,
+      "source_unchanged": true,
+      "output_directory_only_translations": true,
+      "fallback_limit": 42,
+      "seconds": 52.87
+    },
+    {
+      "sample": 2,
+      "sha256": "4a7eb08fbd072eb67219545744093f51934184ca96209a94299b62a3a9936e44",
+      "cues": 674,
+      "status": "PASS",
+      "fallback_cues": 13,
+      "translated_or_non_japanese_cues": 661,
+      "nonempty": true,
+      "timings_and_count_preserved": true,
+      "source_unchanged": true,
+      "output_directory_only_translations": true,
+      "fallback_limit": 42,
+      "seconds": 36.13
+    },
+    {
+      "sample": 3,
+      "sha256": "3e1148709d1289a30ff5f01d23558a8e1c0f5acaaf702c9b60abe16a0ce92c46",
+      "cues": 1015,
+      "status": "PASS",
+      "fallback_cues": 11,
+      "translated_or_non_japanese_cues": 1004,
+      "nonempty": true,
+      "timings_and_count_preserved": true,
+      "source_unchanged": true,
+      "output_directory_only_translations": true,
+      "fallback_limit": 42,
+      "seconds": 50.52
+    }
+  ],
+  "network_scope": "Python socket connections denied; no whole-system firewall isolation",
+  "quality_scope": "Structural and failure-recovery acceptance; machine translation still requires human review"
+}

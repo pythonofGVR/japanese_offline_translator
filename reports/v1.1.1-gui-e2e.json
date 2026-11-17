@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "device": "cuda",
+  "standalone_file_edit": true,
+  "automatic_backup": true,
+  "real_worker": true,
+  "pause_resume": true,
+  "event_loop_heartbeats": 713,
+  "manual_edit_save": true,
+  "single_row_real_retranslation": true,
+  "source_unchanged": true,
+  "output": "C:\\Users\\11972\\AppData\\Local\\Temp\\jot-gui-files-xk_ka3e1\\output\\sample.zh-CN.srt",
+  "visible_failure_details": true
+}

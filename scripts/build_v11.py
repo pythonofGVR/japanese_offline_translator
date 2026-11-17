@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'src'))
@@ -22,7 +23,9 @@ def clean_environment():
 
 def smoke(executable, name, mode, simulated=False):
     report=ROOT/'reports'/f'v1.1.1-{name}.json'
-    command=[str(executable),'--smoke-test','--device',mode,'--require-device','cpu' if simulated else mode,'--report',str(report),'--work-dir',str(ROOT/'reports/local'/name)]
+    parent=ROOT/'reports/local';parent.mkdir(parents=True,exist_ok=True)
+    work=tempfile.mkdtemp(prefix=name+'-',dir=parent)
+    command=[str(executable),'--smoke-test','--device',mode,'--require-device','cpu' if simulated else mode,'--report',str(report),'--work-dir',work]
     if simulated:command.append('--simulate-no-gpu')
     process=subprocess.run(command,cwd=executable.parent,env=clean_environment(),timeout=300)
     if process.returncode or not report.exists():

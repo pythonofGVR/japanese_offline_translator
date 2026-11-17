@@ -1,5 +1,8 @@
 #define AppName "Japanese Offline Translator"
 #define AppVersion "1.1.1"
+#ifndef AppSource
+#define AppSource "..\dist\JapaneseTranslator"
+#endif
 [Setup]
 AppId={{AF8905FA-6BE4-4646-8A40-93A452B12CC7}
 AppName={#AppName}
@@ -19,7 +22,7 @@ SlicesPerDisk=1
 WizardStyle=modern
 LicenseFile=..\LICENSES.md
 [Files]
-Source: "..\dist\JapaneseTranslator\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#AppSource}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
 Name: "{group}\日文离线翻译器"; Filename: "{app}\JapaneseTranslator.exe"
 Name: "{autodesktop}\日文离线翻译器"; Filename: "{app}\JapaneseTranslator.exe"; Tasks: desktopicon
