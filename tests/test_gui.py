@@ -44,6 +44,21 @@ def test_busy_and_small_layout(window):
     assert w.start_button.isEnabled()
     assert not w.cancel_button.isEnabled()
 
+def test_failure_reason_is_visible_and_persisted(window,tmp_path):
+    from jot.jobs import InputFile
+    from jot.gui import MainWindow
+    w,app=window
+    source=tmp_path/'broken.srt';source.write_text('bad',encoding='utf-8')
+    w.add_inputs([InputFile(str(source))])
+    reason='保存译文失败：目标目录不可写（PermissionError）'
+    w.file_state(0,'失败',{'reason':reason})
+    w.files.selectRow(0);app.processEvents()
+    assert w.files.item(0,4).text()==reason
+    assert reason in w.task_details.toPlainText()
+    other=MainWindow()
+    assert other.results[0]['reason']==reason
+    other.close()
+
 def test_gpu_and_parameter_controls(window):
     from jot.parameters import THREAD_MAX,DEFAULT_THREADS,DEFAULT_BEAM
     w,app=window

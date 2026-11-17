@@ -4,6 +4,8 @@ def warnings(source, target):
     result = []
     if not target.strip():
         return ['空译文']
+    if ('<unk>' in target and '<unk>' not in source) or ('⁇' in target and '⁇' not in source):
+        result.append('模型输出未知词标记')
     if re.search(r'[\u3040-\u30ff]', target):
         result.append('残留日文假名')
     plain = re.sub(r'\{[^}]*\}|<[^>]*>', '', target).strip()

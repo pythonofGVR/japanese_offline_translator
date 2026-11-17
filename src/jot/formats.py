@@ -8,6 +8,44 @@ import io
 SUPPORTED = {'.srt', '.ass', '.ssa', '.vtt', '.lrc', '.txt', '.md', '.docx', '.pdf'}
 JAPANESE = re.compile(r'[\u3040-\u30ff\u3400-\u9fff]')
 PROTECTED = re.compile(r'(\{[^{}]*\}|<[^>\n]+>|\\[Nnh]|`+[^`]*`+|https?://\S+|\[[^\]\n]{1,32}\]|^[^\s:：]{1,20}[:：])')
+STRUCTURAL = re.compile(r'\{[^{}]*\}|<[^>\n]+>|\\[Nnh]')
+FALLBACK_LINE_LIMIT = 42
+
+def subtitle_problem(source, target):
+    if not target.strip():
+        return '空译文'
+    if '<unk>' in target and '<unk>' not in source:
+        return '模型输出未知词标记 <unk>'
+    # A generated colon or bracket is dialogue, not a new format control.
+    controls = lambda text: [m.group() for m in STRUCTURAL.finditer(text)
+                             if m.group() not in ('\\N', '\\n')]
+    if controls(source) != controls(target):
+        return '字幕格式标记发生变化，请保留控制标记'
+    prefix = re.match(r'^[^\s:：]{1,20}[:：]', source)
+    if prefix and not target.startswith(prefix.group()):
+        return '说话人前缀发生变化'
+    if '\n\n' in target.replace('\r\n', '\n'):
+        return '字幕正文不能含空行'
+    return ''
+
+def original_one_line(source, limit=FALLBACK_LINE_LIMIT):
+    """Keep format controls and at most 42 visible code points, including ellipsis."""
+    source = re.sub(r'\\[Nn]|[\r\n\t]+', ' ', source)
+    tokens = re.split(r'(\{[^{}]*\}|<[^>\n]+>)', source)
+    visible = ''.join(tokens[::2])
+    budget = limit - 1 if len(visible) > limit else limit
+    output = []
+    shortened = False
+    for index, token in enumerate(tokens):
+        if index % 2:
+            output.append(token)
+        else:
+            output.append(token[:budget])
+            if len(token) > budget and not shortened:
+                output.append('…')
+                shortened = True
+            budget = max(0, budget - len(token))
+    return ''.join(output).strip()
 
 @dataclass
 class Unit:
@@ -121,12 +159,11 @@ class TextDocument:
         pieces, position = [], 0
         for unit, translated in zip(self.units, translations):
             if not translated.strip():
-                raise ValueError('不允许保存空译文')
+                raise ValueError(f'条目 {unit.label}：不允许保存空译文')
             if self.extension in ('.srt', '.vtt', '.lrc', '.ass', '.ssa'):
-                if PROTECTED.findall(unit.source) != PROTECTED.findall(translated):
-                    raise ValueError('字幕格式标记发生变化，请保留控制标记')
-                if '\n\n' in translated.replace('\r\n', '\n'):
-                    raise ValueError('字幕正文不能含空行')
+                problem = subtitle_problem(unit.source, translated)
+                if problem:
+                    raise ValueError(f'条目 {unit.label}：{problem}')
             pieces.extend((self.text[position:unit.start], translated))
             position = unit.end
         pieces.append(self.text[position:])

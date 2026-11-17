@@ -1,0 +1,17 @@
+[
+  {
+    "sample": 1,
+    "cues": 846,
+    "old_format_rejections": 23
+  },
+  {
+    "sample": 2,
+    "cues": 674,
+    "old_format_rejections": 37
+  },
+  {
+    "sample": 3,
+    "cues": 1015,
+    "old_format_rejections": 38
+  }
+]

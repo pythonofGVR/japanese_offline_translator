@@ -57,7 +57,7 @@ def main():
     assert 'GUI' not in window.review.item(0,3).text()
     QTest.mouseClick(window.save_button,Qt.MouseButton.LeftButton)
     assert source.read_bytes()==original
-    window.grab().save(str(ROOT/'reports/gui-review.png'))
+    window.grab().save(str(ROOT/'reports/v1.1.1-gui-review.png'))
     window.open_selected_output()
     assert window.editable_file is not None
     old=window.file_text.toPlainText()
@@ -66,13 +66,25 @@ def main():
     QTest.mouseClick(window.save_file_button,Qt.MouseButton.LeftButton)
     assert not window.file_dirty and '已校对' in output.read_text(encoding='utf-8')
     assert list(output.parent.glob(output.name+'.*.bak'))
-    window.grab().save(str(ROOT/'reports/v1.1-editor.png'))
+    window.grab().save(str(ROOT/'reports/v1.1.1-editor.png'))
     window.tabs.setCurrentIndex(0)
-    window.grab().save(str(ROOT/'reports/gui-native.png'))
+    window.grab().save(str(ROOT/'reports/v1.1.1-gui-native.png'))
+    broken=work/'inputs/broken.srt';broken.write_text('missing timestamp',encoding='utf-8')
+    window.add_inputs([InputFile(str(broken))])
+    QTest.mouseClick(window.start_button,Qt.MouseButton.LeftButton)
+    start=time.perf_counter()
+    while window.worker and time.perf_counter()-start<120:
+        QTest.qWait(30)
+    assert window.worker is None and window.states[1]=='失败'
+    window.files.selectRow(1);app.processEvents()
+    assert '读取/解析失败' in window.task_details.toPlainText()
+    assert '时间轴' in window.files.item(1,4).text()
+    window.grab().save(str(ROOT/'reports/v1.1.1-gui-failure.png'))
     window.resize(1000,700);app.processEvents()
-    window.grab().save(str(ROOT/'reports/gui-small.png'))
+    window.grab().save(str(ROOT/'reports/v1.1.1-gui-small.png'))
     report={'status':'PASS','device':'cuda','standalone_file_edit':True,'automatic_backup':True,'real_worker':True,'pause_resume':True,'event_loop_heartbeats':heartbeat[0],'manual_edit_save':True,'single_row_real_retranslation':True,'source_unchanged':True,'output':str(output)}
-    (ROOT/'reports/gui-e2e.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+    report['visible_failure_details']=True
+    (ROOT/'reports/v1.1.1-gui-e2e.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
     window.close()
     print('Native GUI end-to-end PASS')
 

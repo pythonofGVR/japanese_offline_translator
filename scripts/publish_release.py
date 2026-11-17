@@ -13,10 +13,10 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--gh',required=True)
     parser.add_argument('--repo',default='pythonofGVR/japanese_offline_translator')
-    parser.add_argument('--tag',default='v1.1.0')
+    parser.add_argument('--tag',default='v1.1.1')
     args=parser.parse_args()
-    assets=ROOT/'dist/release-v1.1.0'
-    receipt_path=ROOT/'reports/v1.1-release-upload.json'
+    assets=ROOT/'dist/release-v1.1.1'
+    receipt_path=ROOT/'reports/v1.1.1-release-upload.json'
     def gh(*arguments,capture=False,check=True):
         for attempt in range(3 if capture else 1):
             result=subprocess.run([args.gh,*map(str,arguments)],cwd=ROOT,text=True,encoding='utf-8',stdout=subprocess.PIPE if capture else None,stderr=subprocess.PIPE if capture else None,timeout=1800)
@@ -35,7 +35,7 @@ def main():
             raise RuntimeError('Existing release is not this task draft; refusing to overwrite it.')
     else:
         branch=subprocess.check_output(['git','-c',f'safe.directory={ROOT.as_posix()}','branch','--show-current'],cwd=ROOT,text=True).strip()
-        gh('release','create',args.tag,'--repo',args.repo,'--target',branch,'--draft','--title','Japanese Offline Translator v1.1.0','--notes-file',ROOT/'reports/v1.1-release-notes.md')
+        gh('release','create',args.tag,'--repo',args.repo,'--target',branch,'--draft','--title','Japanese Offline Translator v1.1.1','--notes-file',ROOT/'reports/v1.1.1-release-notes.md')
         for attempt in range(5):
             release=find_release()
             if release:break
@@ -59,7 +59,7 @@ def main():
         for future in as_completed(futures):
             receipt['uploaded'].append(future.result())
             receipt_path.write_text(json.dumps(receipt,indent=2),encoding='utf-8')
-    destination=ROOT/'downloads/github-v1.1-verify';destination.mkdir(parents=True,exist_ok=True)
+    destination=ROOT/'downloads/github-v1.1.1-verify';destination.mkdir(parents=True,exist_ok=True)
     print('Downloading complete draft assets for independent hash verification',flush=True)
     gh('release','download',args.tag,'--repo',args.repo,'--dir',destination,'--clobber')
     for record in receipt['uploaded']:

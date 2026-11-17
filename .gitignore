@@ -22,3 +22,5 @@ reports/quality-offline.json
 converted_models/
 /JapaneseTranslator/
 /OfflineInstaller/
+/runtime/
+/.requirements-dev.txt

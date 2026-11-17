@@ -7,6 +7,7 @@ from datetime import datetime
 from .formats import decode, load_document, TextDocument
 from .paths import atomic_write, read_json, write_json
 from .quality import warnings
+from .reviews import review_path, load_review
 
 EDITABLE = {'.srt','.ass','.ssa','.vtt','.lrc','.txt','.md','.docx'}
 
@@ -60,8 +61,8 @@ class EditableFile:
                     counter += 1
         atomic_write(output, data, replace=same_file or allow_replace)
         # Keep an existing review record in sync without needing its source file.
-        sidecar = output.with_name(output.name+'.review.json')
-        result = read_json(sidecar,{})
+        sidecar = review_path(output)
+        result = load_review(output)
         if result.get('rows'):
             current = load_document(output)
             if len(result['rows']) == len(current.units):

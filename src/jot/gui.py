@@ -2,6 +2,7 @@ import dataclasses
 import os
 from pathlib import Path
 import traceback
+from .reviews import review_path, load_review
 
 from PySide6.QtCore import Qt, QThread, Signal, QUrl, QTimer
 from PySide6.QtGui import QDesktopServices, QFont, QColor
@@ -200,16 +201,23 @@ class MainWindow(QMainWindow):
         right_layout.addLayout(buttons)
         self.tabs = QTabWidget()
         right_layout.addWidget(self.tabs, 1)
-        self.files = QTableWidget(0, 4)
-        self.files.setHorizontalHeaderLabels(['文件 / 拖放文件到此窗口','类型','大小','状态'])
+        self.files = QTableWidget(0, 5)
+        self.files.setHorizontalHeaderLabels(['文件 / 拖放文件到此窗口','类型','大小','状态','结果 / 具体原因'])
         self.files.horizontalHeader().setSectionResizeMode(0,QHeaderView.ResizeMode.Stretch)
         self.files.setColumnWidth(1,65)
         self.files.setColumnWidth(2,90)
         self.files.setColumnWidth(3,100)
+        self.files.setColumnWidth(4,240)
         self.files.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.files.setAlternatingRowColors(True)
         self.files.doubleClicked.connect(self.show_review)
         self.tabs.addTab(self.files,'任务列表')
+        self.task_details = QPlainTextEdit()
+        self.task_details.setReadOnly(True)
+        self.task_details.setMaximumHeight(105)
+        self.task_details.setPlaceholderText('选择任务，查看输出路径、原文保留条数或具体失败原因。')
+        right_layout.addWidget(self.task_details)
+        self.files.itemSelectionChanged.connect(self.show_task_details)
         review_panel = QWidget()
         rv = QVBoxLayout(review_panel)
         self.review_label = QLabel('双击已完成文件，查看原文与译文。译文列可直接编辑。')
@@ -414,14 +422,24 @@ class MainWindow(QMainWindow):
         self.worker.single_result.connect(self.single_done)
         self.worker.finished.connect(self.finished)
 
+    def show_task_details(self):
+        row = self.files.currentRow()
+        result = self.results.get(row, {})
+        self.task_details.setPlainText(result.get('reason','') + ('\n' + '\n'.join(result.get('warnings',[])) if result.get('warnings') else ''))
+
     def file_state(self,index,state,result):
         if index>=len(self.inputs):
             return
         self.states[index]=state
         if result:
             self.results[index]=result
+        elif state=='翻译中':
+            self.results.pop(index,None)
         self.files.item(index,3).setText(state)
         self.files.item(index,3).setToolTip(result.get('reason','') if result else '')
+        self.files.setItem(index,4,item(result.get('reason','') if result else ''))
+        self.files.item(index,4).setToolTip(result.get('reason','') if result else '')
+        self.show_task_details()
         self.update_summary()
         self.persist()
 
@@ -524,7 +542,7 @@ class MainWindow(QMainWindow):
             backup = current.save(value,destination,allow_replace=bool(destination))
             self.file_dirty = False
             if self.review_result and Path(self.review_result['output']).resolve()==current.path:
-                updated=read_json(current.path.with_name(current.path.name+'.review.json'),{})
+                updated=load_review(current.path)
                 if updated.get('rows'):
                     self.fill_review(updated)
                 else:
@@ -542,6 +560,9 @@ class MainWindow(QMainWindow):
         if self.worker or not self.discard_edits():
             return
         result=self.results.get(self.files.currentRow())
+        if result and self.states.get(self.files.currentRow())=='失败':
+            QMessageBox.warning(self,'翻译失败：具体原因',result.get('reason','原因未知，请查看运行日志。'))
+            return
         if not result or result.get('status')!='已完成':
             return
         self.fill_review(result)
@@ -564,7 +585,7 @@ class MainWindow(QMainWindow):
     def open_review(self):
         if not self.discard_edits():
             return
-        path,_=QFileDialog.getOpenFileName(self,'打开校对记录',str(self.output.text() or default_output()),'校对记录 (*.review.json)')
+        path,_=QFileDialog.getOpenFileName(self,'打开校对记录',str(user_data()/'reviews'),'校对记录 (*.review.json)')
         if path:
             result=read_json(path,{})
             if result.get('rows') and result.get('source_hash'):
@@ -608,7 +629,7 @@ class MainWindow(QMainWindow):
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
 
     def persist(self):
-        entries=[dict(path=e.path,root=e.root,state=self.states.get(i,'待处理'),review=(self.results.get(i,{}).get('output','')+'.review.json') if self.results.get(i,{}).get('output') else '') for i,e in enumerate(self.inputs)]
+        entries=[dict(path=e.path,root=e.root,state=self.states.get(i,'待处理'),reason=self.results.get(i,{}).get('reason',''),review=str(review_path(self.results[i]['output'])) if self.results.get(i,{}).get('output') else '') for i,e in enumerate(self.inputs)]
         write_json(self.session_path,entries)
 
     def restore_session(self):
@@ -618,6 +639,8 @@ class MainWindow(QMainWindow):
                 continue
             self.add_inputs([InputFile(entry['path'],entry.get('root',''))])
             index=len(self.inputs)-1
+            if entry.get('state')=='失败':
+                self.file_state(index,'失败',{'reason':entry.get('reason','请重试并查看运行日志')})
             result=read_json(entry.get('review',''),{})
             if result.get('status')=='已完成' and Path(result.get('output','')).is_file() and result.get('source_hash')==source_hash(entry['path']):
                 self.file_state(index,'已完成',result)

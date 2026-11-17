@@ -13,7 +13,7 @@ import time
 
 from .engine import Engine, MODEL_NAMES
 from .jobs import Control, InputFile, Settings, translate_file, scan, save_review
-from .formats import TextDocument, load_document
+from .formats import TextDocument, load_document, FALLBACK_LINE_LIMIT
 from .paths import app_root, write_json
 
 SAMPLES = [
@@ -89,6 +89,7 @@ def main():
     parser.add_argument('--device',choices=['cpu','cuda'],default='cpu')
     parser.add_argument('--require-device',choices=['cpu','cuda'])
     parser.add_argument('--simulate-no-gpu',action='store_true')
+    parser.add_argument('--subtitles-dir',type=Path,help='Optional private local SRT acceptance inputs; report contains metrics only')
     args=parser.parse_args()
     root=app_root()
     result={'status':'FAIL','platform':platform.platform(),'cpu':platform.processor(),'logical_cpus':os.cpu_count(),'offline_scope':'Python socket connect/connect_ex/create_connection/getaddrinfo disabled before model loading; native library not firewall-blocked','models':{},'tests':[]}
@@ -160,12 +161,45 @@ def main():
             model['fallback_reason']=engine.fallback_reason
             if args.require_device:
                 assert engine.device==args.require_device,engine.fallback_reason
+            if args.subtitles_dir:
+                import re
+                for number, path in enumerate(sorted(args.subtitles_dir.glob('*.srt')),1):
+                    original=path.read_bytes()
+                    before=load_document(path)
+                    translated=translate_file(InputFile(str(path)),Settings(model=key,device=args.device,quality='best',output=str(work/'private-output'/key)),engine,Control())
+                    output=Path(translated['output'])
+                    after=load_document(output)
+                    assert path.read_bytes()==original
+                    assert [u.label for u in before.units]==[u.label for u in after.units]
+                    assert all(p.suffix=='.srt' for p in output.parent.iterdir())
+                    for unit,row in zip(after.units,translated['rows']):
+                        assert unit.source.strip()
+                        if any(w.startswith('保留原文：') for w in row['warnings']):
+                            assert not re.search(r'[\r\n]|\\[Nn]',unit.source)
+                            assert len(re.sub(r'\{[^{}]*\}|<[^>\n]+>','',unit.source))<=FALLBACK_LINE_LIMIT
+                    result['tests'].append(dict(case='private SRT complete-file acceptance',model=key,sample=number,cues=len(before.units),fallback_cues=translated['fallback_count'],sha256=hashlib.sha256(original).hexdigest(),status='PASS'))
         # Switching back must unload the larger model and reload the smaller one.
         if len(args.models)>1:
             engine.load('fast',4,args.device)
             assert engine.key=='fast'
             result['tests'].append({'case':'model switch quality -> fast','status':'PASS'})
         from .editor import EditableFile
+        # Fault injection exercises the packaged recovery code, not just source tests.
+        failed_input=work/'decoder-failure.srt'
+        failed_input.write_text('1\n00:00:01,000 --> 00:00:03,000\n'+'長い原文です。'*20+'\n次の行。\n',encoding='utf-8')
+        saved_infer=engine.infer
+        def broken_decoder(*args,**kwargs):
+            raise RuntimeError('injected decoder failure')
+        try:
+            engine.infer=broken_decoder
+            recovery=translate_file(InputFile(str(failed_input)),Settings(output=str(work/'failure-output')),engine,Control())
+        finally:
+            engine.infer=saved_infer
+        recovered=load_document(recovery['output']).units[0].source
+        assert recovery['fallback_count']==1 and len(recovered)<=FALLBACK_LINE_LIMIT and '\n' not in recovered
+        assert any('injected decoder failure' in w for w in recovery['rows'][0]['warnings'])
+        assert [p.name for p in Path(recovery['output']).parent.iterdir()]==[Path(recovery['output']).name]
+        result['tests'].append({'case':'decoder failure produces saved bounded original with specific reason; output only translation','status':'PASS'})
         translated=engine.translate([SAMPLES[0][0]],force=True)[0][0]
         standalone=work/'standalone-translation.txt'
         standalone.write_text(translated,encoding='utf-8')

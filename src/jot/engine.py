@@ -149,7 +149,9 @@ class Engine:
                         while len(self.sp.encode(unit)) > 350:
                             cut = max(1, len(unit) // 2)
                             while len(self.sp.encode(unit[:cut])) > 350:
-                                cut //= 2
+                                if cut == 1:
+                                    raise ValueError('单个字符超过模型输入上限')
+                                cut = max(1, cut // 2)
                             chunks.append(unit[:cut])
                             unit = unit[cut:]
                         combined += unit
@@ -163,12 +165,11 @@ class Engine:
                     expanded.append(trailing)
             all_parts.append(expanded)
         total = len(jobs)
-        cache_keys = {}
+        failure_by_source = {}
         pending = {}
         for i, offset, source in jobs:
-            settings = [self.key, self.revision, self.device, self.compute_type, language, quality, beam, source, 'pipeline-v3']
+            settings = [self.key, self.revision, self.device, self.compute_type, language, quality, beam, source, 'pipeline-v5']
             key = hashlib.sha256(json.dumps(settings, ensure_ascii=False).encode()).hexdigest()
-            cache_keys[source] = key
             row = None if force else self.db.execute('SELECT value FROM cache WHERE key=?', (key,)).fetchone()
             if row:
                 all_parts[i][offset] = row[0]
@@ -181,26 +182,49 @@ class Engine:
         for start in range(0, len(sources), 8):
             boundary()
             batch = sources[start:start+8]
-            first = self.infer(batch, language, beam)
+            errors = {}
+            try:
+                first = self.infer(batch, language, beam)
+                if len(first) != len(batch):
+                    raise ValueError('模型返回条目数不匹配')
+            except Exception as exc:
+                # Isolate a bad batch; each segment gets finite individual retries.
+                first = []
+                for source in batch:
+                    boundary()
+                    try:
+                        first.append(self.infer([source], language, beam)[0])
+                    except Exception as single:
+                        first.append('')
+                        errors[source] = f'{type(single).__name__}: {single}（批次：{type(exc).__name__}: {exc}）'
             chosen = list(first)
             for n, (source, candidate) in enumerate(zip(batch, first)):
                 initial_by_source[source] = candidate
                 attempts = 0 if quality == 'standard' else (2 if quality == 'best' else 1)
+                if not candidate.strip():
+                    attempts = max(attempts, 2)
                 if warnings(source, candidate):
                     for retry in range(attempts):
                         boundary()
-                        alternate = self.infer([source], language, max(beam, 5 + retry * 2), retry=retry + 1)[0]
+                        try:
+                            alternate = self.infer([source], language, max(beam, 5 + retry * 2), retry=retry + 1)[0]
+                        except Exception as exc:
+                            errors[source] = f'{type(exc).__name__}: {exc}'
+                            continue
                         if score(source, alternate) < score(source, chosen[n]):
                             chosen[n] = alternate
-                if not chosen[n].strip():
+                severe = [w for w in warnings(source, chosen[n]) if w in ('空译文','残留日文假名','原文未翻译','译文可能过短','译文可能过长','模型输出未知词标记')]
+                if severe:
                     chosen[n] = source
+                    failure_by_source[source] = '保留原文：有限重试后仍无法翻译；' + (errors.get(source) or '；'.join(severe))
                 for i, offset in pending[source]:
                     all_parts[i][offset] = chosen[n]
                     done += 1
                 # A failed GPU inference may have switched to CPU within this batch.
-                settings = [self.key, self.revision, self.device, self.compute_type, language, quality, beam, source, 'pipeline-v3']
+                settings = [self.key, self.revision, self.device, self.compute_type, language, quality, beam, source, 'pipeline-v5']
                 actual_key = hashlib.sha256(json.dumps(settings, ensure_ascii=False).encode()).hexdigest()
-                self.db.execute('INSERT OR REPLACE INTO cache VALUES (?,?)', (actual_key, chosen[n]))
+                if source not in failure_by_source:
+                    self.db.execute('INSERT OR REPLACE INTO cache VALUES (?,?)', (actual_key, chosen[n]))
             self.db.commit()
             progress(done, total)
         final = [''.join(parts) for parts in all_parts]
@@ -212,4 +236,7 @@ class Engine:
                 original_parts[i][offset] = initial_by_source[source]
         first_pass = [''.join(p) for p in original_parts]
         flags = [warnings(s, t) for s, t in zip(texts, final)]
+        for i, offset, source in jobs:
+            if source in failure_by_source and failure_by_source[source] not in flags[i]:
+                flags[i].append(failure_by_source[source])
         return final, first_pass, flags
