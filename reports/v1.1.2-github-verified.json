@@ -1,0 +1,62 @@
+{
+  "status": "PASS",
+  "downloaded_from_github": true,
+  "all_asset_hashes_match": true,
+  "artifacts": [
+    {
+      "name": "INSTALL_OFFLINE.md",
+      "bytes": 1793,
+      "sha256": "30e12e67f821504bed7bb7f57e70350c3767966aef15001ba3e73830d73e80cf"
+    },
+    {
+      "name": "JapaneseTranslatorSetup-1.bin",
+      "bytes": 598097920,
+      "sha256": "536a5b8eb5f2d050044c748522de1344eb0ab46081a63ccb3d6d8b558a8d5282"
+    },
+    {
+      "name": "JapaneseTranslatorSetup-2.bin",
+      "bytes": 600000000,
+      "sha256": "b5ba81006538877d6e61af96676cb302d5151a1ccaa6db0fc4a940c7786d6a8b"
+    },
+    {
+      "name": "JapaneseTranslatorSetup-3.bin",
+      "bytes": 600000000,
+      "sha256": "173d9483eae20271f0a27a8143eca4198815e8090eeadc966deddb2dad91d8a5"
+    },
+    {
+      "name": "JapaneseTranslatorSetup-4.bin",
+      "bytes": 319353719,
+      "sha256": "187e2a5566ae9e9150dfefc33b1f740c2dadb9cf93eb02b4b6c7cc6427dbbc91"
+    },
+    {
+      "name": "JapaneseTranslatorSetup.exe",
+      "bytes": 1901821,
+      "sha256": "b5c882d3d1a5e0f8b2047aa447ac48342c13a5258e88364c8af3fb16ce66cc32"
+    }
+  ],
+  "installed_modes": {
+    "cpu": {
+      "status": "PASS",
+      "checks": 27,
+      "native_gui_status": "PASS",
+      "native_gui_checks": 4,
+      "loaded_icu": "C:\\WINDOWS\\system32\\icuuc.dll"
+    },
+    "gpu": {
+      "status": "PASS",
+      "checks": 27,
+      "native_gui_status": "PASS",
+      "native_gui_checks": 4,
+      "loaded_icu": "C:\\WINDOWS\\system32\\icuuc.dll"
+    },
+    "no-gpu": {
+      "status": "PASS",
+      "checks": 27,
+      "native_gui_status": "PASS",
+      "native_gui_checks": 4,
+      "loaded_icu": "C:\\WINDOWS\\system32\\icuuc.dll"
+    }
+  },
+  "network_scope": "Python socket connect/connect_ex/create_connection/getaddrinfo disabled before model loading; native library not firewall-blocked",
+  "independent_second_windows_host": false
+}

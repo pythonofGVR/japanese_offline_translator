@@ -54,7 +54,13 @@ def install_and_validate(assets, name, seed_legacy_icu=False):
     if seed_legacy_icu:
         (target/'_internal').mkdir(parents=True,exist_ok=True)
         for dll in ('icuuc.dll','icudt78.dll'):
-            shutil.copy2(ROOT/'JapaneseTranslator/_internal'/dll,target/'_internal'/dll)
+            legacy=ROOT/'JapaneseTranslator/_internal'/dll
+            if legacy.is_file():
+                shutil.copy2(legacy,target/'_internal'/dll)
+            else:
+                # A clean checkout no longer has the faulty old runtime. The
+                # installer must remove stale names even with no old package.
+                (target/'_internal'/dll).write_bytes(b'TEST ONLY: stale ICU upgrade fixture')
     startup=subprocess.STARTUPINFO();startup.dwFlags|=subprocess.STARTF_USESHOWWINDOW
     subprocess.run([str(assets/'JapaneseTranslatorSetup.exe'),'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-',f'/DIR={target}','/TASKS='],startupinfo=startup,check=True,timeout=600)
     executable=target/'JapaneseTranslator.exe'

@@ -34,20 +34,61 @@ def download_verified(gh, repo, release, records, source, destination):
                 parts.append(part)
                 if not (path.is_file() and path.stat().st_size==len(expected) and digest(path)==sha):jobs.append(part)
         pending.append((record,target,parts))
+    def recover_partial(part):
+        asset_id,name,start,size,sha,path=part
+        temporary=path.with_suffix('.partial')
+        prefix=b''
+        with (source/name).open('rb') as original:
+            if temporary.is_file():
+                with temporary.open('rb') as previous:received=previous.read(size)
+                original.seek(start)
+                if received and hashlib.sha256(received).digest()==hashlib.sha256(original.read(len(received))).digest():prefix=received
+        pieces=[];cursor=len(prefix)
+        while cursor<size:
+            length=min(4*1024*1024,size-cursor)
+            with (source/name).open('rb') as original:
+                original.seek(start+cursor);expected=hashlib.sha256(original.read(length)).hexdigest()
+            piece=path.with_name(path.name+f'-piece-{cursor}.partial')
+            for attempt in range(6):
+                env=dict(os.environ);env['GODEBUG']='http2client=0,tlsmlkem=0'
+                try:
+                    with piece.open('wb') as output:
+                        subprocess.run([gh,'api',f'repos/{repo}/releases/assets/{asset_id}?segment={start+cursor}&length={length}&retry={attempt}','-H','Accept: application/octet-stream','-H',f'Range: bytes={start+cursor}-{start+cursor+length-1}'],stdout=output,stderr=subprocess.DEVNULL,env=env,timeout=100)
+                    # A transport EOF after the body is harmless only if every byte
+                    # has independently matched its expected cryptographic hash.
+                    if piece.stat().st_size==length and digest(piece)==expected:break
+                except subprocess.TimeoutExpired:
+                    pass
+            else:raise RuntimeError(f'Cannot verify recovery bytes: {name}, {start+cursor}')
+            pieces.append(piece);cursor+=length
+        joining=path.with_suffix('.joining')
+        with joining.open('wb') as output:
+            output.write(prefix)
+            for piece in pieces:
+                with piece.open('rb') as stream:shutil.copyfileobj(stream,output)
+        if joining.stat().st_size!=size or digest(joining)!=sha:
+            raise RuntimeError('Recovered range hash mismatch')
+        os.replace(joining,path)
+
     def fetch(part):
         asset_id,name,start,size,sha,path=part
         temporary=path.with_suffix('.partial')
+        if temporary.is_file() and temporary.stat().st_size:
+            return recover_partial(part)
         for attempt in range(4):
             try:
                 with temporary.open('wb') as output:
-                    process=subprocess.run([gh,'api',f'repos/{repo}/releases/assets/{asset_id}?segment={start}','-H','Accept: application/octet-stream','-H',f'Range: bytes={start}-{start+size-1}'],stdout=output,timeout=100)
-                if process.returncode==0 and temporary.stat().st_size==size and digest(temporary)==sha:
+                    env=dict(os.environ)
+                    env['GODEBUG']='http2client=0,tlsmlkem=0'
+                    # Do not write signed redirect URLs into logs on transport errors.
+                    process=subprocess.run([gh,'api',f'repos/{repo}/releases/assets/{asset_id}?segment={start}','-H','Accept: application/octet-stream','-H',f'Range: bytes={start}-{start+size-1}'],stdout=output,stderr=subprocess.DEVNULL,env=env,timeout=100)
+                if temporary.stat().st_size==size and digest(temporary)==sha:
                     os.replace(temporary,path)
                     return
             except subprocess.TimeoutExpired:
                 pass
             print(f'Retry remote range: {name}, {start}, attempt {attempt+2}',flush=True)
-        raise RuntimeError(f'Cannot verify downloaded range: {name}, {start}')
+        return recover_partial(part)
     with ThreadPoolExecutor(max_workers=16) as pool:
         futures=[pool.submit(fetch,part) for part in jobs]
         for count,future in enumerate(as_completed(futures),1):

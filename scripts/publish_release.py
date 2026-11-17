@@ -58,7 +58,7 @@ def main():
             if now-last>=30:
                 rate=(read-previous)/(now-last)
                 # Retry only our own slow child and only while another attempt remains.
-                if attempt<3 and now-start>45 and rate<384*1024 and read<path.stat().st_size-64*1024*1024:
+                if attempt<6 and now-start>45 and rate<384*1024 and read<path.stat().st_size-64*1024*1024:
                     print('Retrying slow upload connection: '+path.name,flush=True)
                     process.kill();break
                 last,previous=now,read
@@ -69,7 +69,7 @@ def main():
         with path.open('rb') as stream:expected=hashlib.file_digest(stream,'sha256').hexdigest()
         remote=next((a for a in release['assets'] if a['name']==path.name),None)
         if not (remote and remote.get('digest')=='sha256:'+expected):
-            for attempt in range(1,4):
+            for attempt in range(1,7):
                 print(f'Uploading {path.name} ({path.stat().st_size:,} bytes), attempt {attempt}',flush=True)
                 code=upload_process(path,attempt)
                 if code==0:break
