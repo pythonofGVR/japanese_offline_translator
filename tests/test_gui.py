@@ -59,6 +59,23 @@ def test_failure_reason_is_visible_and_persisted(window,tmp_path):
     assert other.results[0]['reason']==reason
     other.close()
 
+def test_legacy_review_survives_two_session_restores(window,tmp_path):
+    from dataclasses import asdict
+    from jot.gui import MainWindow
+    from jot.jobs import Settings,source_hash
+    from jot.paths import write_json
+    w,app=window
+    source=tmp_path/'old-input.txt';source.write_text('こんにちは。',encoding='utf-8')
+    output=tmp_path/'old-input.zh-CN.txt';output.write_text('你好。',encoding='utf-8')
+    legacy=output.with_name(output.name+'.review.json')
+    result=dict(status='已完成',source=str(source),source_hash=source_hash(source),output=str(output),settings=asdict(Settings()),rows=[dict(source='こんにちは。',target='你好。',initial='你好。',label='1',warnings=[])],warnings=[])
+    write_json(legacy,result)
+    write_json(w.session_path,[dict(path=str(source),root='',state='已完成',review=str(legacy))])
+    first=MainWindow();assert first.states[0]=='已完成';first.close()
+    second=MainWindow();assert second.states[0]=='已完成'
+    assert second.results[0]['rows'][0]['target']=='你好。'
+    second.close()
+
 def test_gpu_and_parameter_controls(window):
     from jot.parameters import THREAD_MAX,DEFAULT_THREADS,DEFAULT_BEAM
     w,app=window

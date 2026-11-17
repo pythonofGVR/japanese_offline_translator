@@ -629,7 +629,7 @@ class MainWindow(QMainWindow):
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
 
     def persist(self):
-        entries=[dict(path=e.path,root=e.root,state=self.states.get(i,'待处理'),reason=self.results.get(i,{}).get('reason',''),review=str(review_path(self.results[i]['output'])) if self.results.get(i,{}).get('output') else '') for i,e in enumerate(self.inputs)]
+        entries=[dict(path=e.path,root=e.root,state=self.states.get(i,'待处理'),reason=self.results.get(i,{}).get('reason',''),output=self.results.get(i,{}).get('output',''),review=str(review_path(self.results[i]['output'])) if self.results.get(i,{}).get('output') else '') for i,e in enumerate(self.inputs)]
         write_json(self.session_path,entries)
 
     def restore_session(self):
@@ -642,6 +642,8 @@ class MainWindow(QMainWindow):
             if entry.get('state')=='失败':
                 self.file_state(index,'失败',{'reason':entry.get('reason','请重试并查看运行日志')})
             result=read_json(entry.get('review',''),{})
+            if not result and entry.get('output'):
+                result=load_review(entry['output'])
             if result.get('status')=='已完成' and Path(result.get('output','')).is_file() and result.get('source_hash')==source_hash(entry['path']):
                 self.file_state(index,'已完成',result)
         if saved:
