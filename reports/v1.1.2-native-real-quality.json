@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "tests": [
+    "QtCore/QtGui/QtWidgets import and native main window",
+    "Qt event loop stays responsive during actual worker translation",
+    "SRT output saved; source, cue labels and timings preserved; output only translations"
+  ],
+  "model": "quality",
+  "requested_device": "cuda",
+  "loaded_icu": "C:\\WINDOWS\\system32\\icuuc.dll",
+  "platform_plugin": "windows",
+  "qt_version": "6.12.0",
+  "samples": [
+    {
+      "sample": 1,
+      "cues": 846,
+      "fallback_cues": 7,
+      "device": "cuda",
+      "sha256": "bda782ba8569e7682c4062677d23b1054984e7f3a936b57e3c6aa654dd0cbbd2",
+      "status": "PASS"
+    },
+    {
+      "sample": 2,
+      "cues": 674,
+      "fallback_cues": 7,
+      "device": "cuda",
+      "sha256": "4a7eb08fbd072eb67219545744093f51934184ca96209a94299b62a3a9936e44",
+      "status": "PASS"
+    },
+    {
+      "sample": 3,
+      "cues": 1015,
+      "fallback_cues": 9,
+      "device": "cuda",
+      "sha256": "3e1148709d1289a30ff5f01d23558a8e1c0f5acaaf702c9b60abe16a0ce92c46",
+      "status": "PASS"
+    }
+  ],
+  "heartbeats": 8626
+}

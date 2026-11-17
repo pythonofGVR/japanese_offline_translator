@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "version": "1.1.2",
+  "mode": "ordinary EXE launch without test arguments",
+  "computer_use_observed_native_main_window": true,
+  "model_ready": true,
+  "unhandled_exception_dialog": false,
+  "isolated_test_appdata": true,
+  "closed_test_process_after_inspection": true
+}

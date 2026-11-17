@@ -1,0 +1,17 @@
+{
+  "root_cause": "Foreign ICU 78 from build PATH was bundled as icuuc.dll; Qt imports Windows ICU unversioned functions",
+  "foreign_original_filename": "icuuc78.dll",
+  "missing_functions": [
+    "ucnv_open",
+    "ucnv_close",
+    "ucnv_toUnicode"
+  ],
+  "reproduced_winerror": 127,
+  "original_qt_load_with_system_icu_preloaded": "PASS",
+  "fix": [
+    "exclude foreign ICU from bundle",
+    "preload OS System32/icuuc.dll before Qt",
+    "delete stale ICU DLLs during installer upgrade"
+  ],
+  "previous_acceptance_gap": "headless frozen translation acceptance did not import Qt or show a native window"
+}

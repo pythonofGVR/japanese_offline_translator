@@ -1,0 +1,44 @@
+{
+  "version": "1.1.2",
+  "exe_sha256": "66d2e67b598cdc9645e5a49f883a0718035f2480239c8ff89facd3e0496ecd9c",
+  "source_sha256": {
+    "devices.py": "9069c76548bf3c5d446789e2e1594b8d9d0b34bad0a2ee3d8fb09cee047e185b",
+    "editor.py": "cdb677b0122d8cb2b8e53bf0187ca388832464d383fd73c2c2292b694ba28aad",
+    "engine.py": "580ebd7dec721a9450f1dbbd1a4cbd0a2df22d65e0ecf4a2c8271f733a660352",
+    "formats.py": "f7b2d28b9a886e169564520c140dbc835075626acc047c561e88ac457dfc8d65",
+    "gui.py": "189717fbeeb3d3b9d021bb4b53e3f7e6994e362313f5a4062633a310bec16790",
+    "gui_validation.py": "fe5cfed101de416d10077ca41efba2d9ba349e10544855a3e408775abf50d954",
+    "jobs.py": "96caa1cf28d54785b8d4740a9fb942c2995ccf495c7a11d50bfe1d3c7e042b5f",
+    "parameters.py": "ad9203eef2e71361d3d0518b9324b67f4539b6e1a82a14cbdcce875ec7ac7df7",
+    "paths.py": "35ebae0ebd190faad3aee94ab4207a4b904c9e502a6df0c6d8b6eac34112ec0c",
+    "quality.py": "bf89c1e750b515b3fb8efe9cb6f51648a9f4c9b99c60f3e44e02d90c3195ff61",
+    "reviews.py": "37e54dcdeded2881c431e6db07e15f758633ec9ce42e26c1df60b6df48181ecb",
+    "startup.py": "039f17deeb2b20d3c34d363f09f8ca5f1e8e1439c507a571f37664bafb1211b3",
+    "validation.py": "b771a91e2ca588823f88c5476b83666abf5e906e93d3282df143f1fe3c639162",
+    "__init__.py": "0a7c411f2d7b8cdbb1e488bc37997e70a9eae37bb30f0369d60df3a053aa1e58",
+    "__main__.py": "c87ecc71c9d9041935708ed874f7a6e7360d2c5859b35f687081e4b29d087499"
+  },
+  "native_windows": {
+    "cpu": "PASS",
+    "gpu": "PASS",
+    "no-gpu": "PASS"
+  },
+  "bundle": {
+    "foreign_icu_dlls": [],
+    "windows_icu": "System32/icuuc.dll; loaded explicitly before Qt"
+  },
+  "compiler_sha256": "f3c42116542c4cc57263c5ba6c4feabfc49fe771f2f98a79d2f7628b8762723b",
+  "legacy_upgrade": {
+    "seeded_stale_files": [
+      "_internal/icuuc.dll",
+      "_internal/icudt78.dll"
+    ],
+    "post_install_bundle_has_no_icu_dll": true,
+    "native_gui_modes": [
+      "cpu",
+      "gpu",
+      "no-gpu"
+    ],
+    "status": "PASS"
+  }
+}
