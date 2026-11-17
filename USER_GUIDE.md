@@ -1,4 +1,4 @@
-﻿# 使用指南 v1.1.1
+﻿# 使用指南 v1.1.2
 
 ## 安装与启动
 
@@ -44,6 +44,6 @@ Windows 10/11 x64，CPU 至少 SSE 4.1，建议留出 8 GB 可用内存与 6 GB 
 
 ## 源码与重建
 
-完整源码及构建脚本：https://github.com/pythonofGVR/japanese_offline_translator/tree/v1.1.1 。可替换 ABI 兼容的 Qt 动态库，或从源码重建。
+完整源码及构建脚本：https://github.com/pythonofGVR/japanese_offline_translator/tree/v1.1.2 。可替换 ABI 兼容的 Qt 动态库，或从源码重建。
 Python 3.13 x64 创建 .venv，安装 requirements.lock.txt，然后 pip install -e . --no-build-isolation。python scripts/prepare_models.py 在构建阶段下载固定模型并校验；python scripts/build.py 构建并验证完整发行包。
 本次使用已公开转换的 fairseq INT8 权重，本机未重新做权重转换。scripts/convert_models.py 是可选的 Transformers 替代转换工具，未在本次发布执行，输出必须重新验收。

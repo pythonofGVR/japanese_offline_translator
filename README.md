@@ -1,10 +1,10 @@
-﻿# 日文离线翻译器 v1.1.1
+﻿# 日文离线翻译器 v1.1.2
 
 Windows x64 本地日文翻译：CPU 或可选 NVIDIA CUDA GPU，GPU 不可用自动回退 CPU。运行时不联网，不需要 Python、CUDA Toolkit、账户或 API Key。
 
 ## 下载完整应用
 
-[打开 v1.1.1 完整离线发行页](https://github.com/pythonofGVR/japanese_offline_translator/releases/tag/v1.1.1)
+[打开 v1.1.2 完整离线发行页](https://github.com/pythonofGVR/japanese_offline_translator/releases/tag/v1.1.2)
 
 在 Assets 中下载 JapaneseTranslatorSetup.exe、所有 JapaneseTranslatorSetup-*.bin 和 SHA256SUMS.txt，放在同一个文件夹，再双击 EXE 安装。数据文件包含两个模型和 CPU/GPU 运行库，不能遗漏。GitHub 默认的 Source code ZIP 仅供开发，不是可直接运行的软件。
 
@@ -12,12 +12,13 @@ Windows x64 本地日文翻译：CPU 或可选 NVIDIA CUDA GPU，GPU 不可用�
 
 ## 功能
 
+- v1.1.2 修复 Windows QtCore DLL 启动失败：排除误打包的第三方 ICU，启动前固定加载 Windows 系统 ICU，安装升级会清除旧副本。冻结版、安装版和 GitHub 下载版均需通过原生窗口、翻译与编辑测试。
 - 日文到简体中文、繁体中文、英文；M2M100 418M / 1.2B INT8 双模型。
 - 批量文件、递归文件夹、SRT/ASS/SSA/VTT/LRC、TXT/Markdown/DOCX、可提取文本的 PDF。
 - 保留原文，输出自动编号，字幕结构校验；缓存、暂停/继续、取消、任务恢复。
 - 异常质量检测和条件重译、人工对照校对；独立译文文件编辑与自动备份。
 - CPU 线程数 1–min(32,逻辑处理器数)，默认 min(4,上限)；搜索宽度 1–10，默认 3；可恢复默认参数。
-- v1.1.1 修复 SRT 翻译完成却未保存的问题；单句失败隔离、有限重试和单行原文兜底（最多 42 个可见字符），任务中显示具体原因和保留条数。
+- v1.1.2 修复 SRT 翻译完成却未保存的问题；单句失败隔离、有限重试和单行原文兜底（最多 42 个可见字符），任务中显示具体原因和保留条数。
 - 翻译输出目录仅含译文；含原文的校对记录留在本机应用数据目录，不复制或移动原字幕。
 
 机器翻译仍可能误译。规则检测不能代替语义校对，尚未实现 OCR 与跨字幕上下文推理。

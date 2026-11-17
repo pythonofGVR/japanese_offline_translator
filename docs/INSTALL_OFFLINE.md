@@ -1,4 +1,4 @@
-# v1.1.1 完整离线安装
+# v1.1.2 完整离线安装
 
 从本版本 GitHub Release 的 Assets 下载以下所有文件，放在同一个文件夹：
 
@@ -16,5 +16,5 @@
 运行后可选择 CPU 或 GPU 优先。线程数 1–min(32,逻辑处理器数)，默认 min(4,上限)；搜索宽度 1–10，默认 3，可点击恢复默认参数。
 “文件编辑”页可直接打开字幕、TXT、Markdown、DOCX，无需原文或校对记录。保存前自动创建 `.bak` 备份；字幕时间轴和控制标记受保护，DOCX 保留基本格式。
 
-仓库及完整版本下载：https://github.com/pythonofGVR/japanese_offline_translator/releases/tag/v1.1.1
+仓库及完整版本下载：https://github.com/pythonofGVR/japanese_offline_translator/releases/tag/v1.1.2
 仓库当前公开，可直接从 Release 下载；下载完整后，安装和翻译均不需要 GitHub 登录或互联网。

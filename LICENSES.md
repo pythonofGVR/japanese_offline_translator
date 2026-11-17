@@ -23,7 +23,7 @@
 
 精确版本与原始许可证文件在便携包 licenses/ 内。构建脚本自动从安装包元数据复制声明，不把本表代替全文。
 
-Qt 动态库位于 `_internal/PySide6/`，可以替换为 ABI 兼容的修改版本。不得限制用户为调试对 LGPL 组件的修改而进行逆向工程的权利。完整应用源代码和重建脚本可从 https://github.com/pythonofGVR/japanese_offline_translator/tree/v1.1.1 获取（也可下载本版本 Source code），方便更换 Qt / PySide6 后重建。软件未采用加密、签名锁定或静态链接来阻止替换 LGPL 库。
+Qt 动态库位于 `_internal/PySide6/`，可以替换为 ABI 兼容的修改版本。不得限制用户为调试对 LGPL 组件的修改而进行逆向工程的权利。完整应用源代码和重建脚本可从 https://github.com/pythonofGVR/japanese_offline_translator/tree/v1.1.2 获取（也可下载本版本 Source code），方便更换 Qt / PySide6 后重建。软件未采用加密、签名锁定或静态链接来阻止替换 LGPL 库。
 
 Qt / PySide6 对应版本与来源：
 

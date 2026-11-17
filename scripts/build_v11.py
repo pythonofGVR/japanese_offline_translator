@@ -12,17 +12,18 @@ import tempfile
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'src'))
 from jot.validation import verify_models
+from windows_bundle import verify_windows_bundle
 
 def clean_environment():
     env=dict(os.environ)
     for key in ('PYTHONPATH','PYTHONHOME','QT_PLUGIN_PATH','QT_QPA_PLATFORM','VIRTUAL_ENV','CUDA_PATH','CUDA_HOME'):
         env.pop(key,None)
     env['PATH']=str(Path(os.environ['SYSTEMROOT'])/'System32')
-    env['LOCALAPPDATA']=str(ROOT/'reports/local/v1.1.1-appdata')
+    env['LOCALAPPDATA']=str(ROOT/'reports/local/v1.1.2-appdata')
     return env
 
 def smoke(executable, name, mode, simulated=False):
-    report=ROOT/'reports'/f'v1.1.1-{name}.json'
+    report=ROOT/'reports'/f'v1.1.2-{name}.json'
     parent=ROOT/'reports/local';parent.mkdir(parents=True,exist_ok=True)
     work=tempfile.mkdtemp(prefix=name+'-',dir=parent)
     command=[str(executable),'--smoke-test','--device',mode,'--require-device','cpu' if simulated else mode,'--report',str(report),'--work-dir',work]
@@ -35,22 +36,44 @@ def smoke(executable, name, mode, simulated=False):
     print(f'PASS {name}: {len(result["tests"])} checks',flush=True)
     return result
 
-def install_and_validate(assets, name):
+def gui_smoke(executable, name, mode, simulated=False):
+    report=ROOT/'reports'/f'v1.1.2-{name}-gui.json'
+    work=Path(tempfile.mkdtemp(prefix=name+'-gui-',dir=ROOT/'reports/local'))
+    command=[str(executable),'--gui-smoke-test','--device',mode,'--require-device','cpu' if simulated else mode,'--report',str(report),'--work-dir',str(work),'--screenshot',str(report.with_suffix('.png'))]
+    if simulated:command.append('--simulate-no-gpu')
+    process=subprocess.run(command,cwd=executable.parent,env=clean_environment(),timeout=300)
+    if process.returncode or not report.is_file():raise RuntimeError(f'Native GUI failed: {report}')
+    result=json.loads(report.read_text(encoding='utf-8'))
+    if result['status']!='PASS':raise RuntimeError(json.dumps(result,ensure_ascii=False))
+    print(f'PASS native window {name}: {len(result["tests"])} checks',flush=True)
+    return result
+
+def install_and_validate(assets, name, seed_legacy_icu=False):
     target=(ROOT/'dist'/name).resolve()
     assert target.parent==(ROOT/'dist').resolve()
+    if seed_legacy_icu:
+        (target/'_internal').mkdir(parents=True,exist_ok=True)
+        for dll in ('icuuc.dll','icudt78.dll'):
+            shutil.copy2(ROOT/'JapaneseTranslator/_internal'/dll,target/'_internal'/dll)
     startup=subprocess.STARTUPINFO();startup.dwFlags|=subprocess.STARTF_USESHOWWINDOW
     subprocess.run([str(assets/'JapaneseTranslatorSetup.exe'),'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-',f'/DIR={target}','/TASKS='],startupinfo=startup,check=True,timeout=600)
     executable=target/'JapaneseTranslator.exe'
+    verify_windows_bundle(target)
     results=[smoke(executable,f'{name}-cpu','cpu'),smoke(executable,f'{name}-gpu','cuda'),smoke(executable,f'{name}-no-gpu','cuda',True)]
+    for result,mode,simulated in zip(results,('cpu','cuda','cuda'),(False,False,True)):
+        result['native_gui']=gui_smoke(executable,f'{name}-'+('no-gpu' if simulated else 'gpu' if mode=='cuda' else 'cpu'),mode,simulated)
+        result['upgrade_stale_icu_removed']=seed_legacy_icu
     subprocess.run([str(target/'unins000.exe'),'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART'],startupinfo=startup,check=True,timeout=120)
     return results
 
-def main():
+def main(freeze=True):
     from build import licenses
     verify_models(ROOT)
-    subprocess.run([sys.executable,'-m','pytest','-q','--junitxml=reports/v1.1.1-tests.xml'],cwd=ROOT,env={**os.environ,'QT_QPA_PLATFORM':'offscreen'},check=True)
-    subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean',str(ROOT/'scripts/JapaneseTranslator.spec')],cwd=ROOT,check=True)
+    subprocess.run([sys.executable,'-m','pytest','-q','--junitxml=reports/v1.1.2-tests.xml'],cwd=ROOT,env={**os.environ,'QT_QPA_PLATFORM':'offscreen'},check=True)
+    if freeze:
+        subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean',str(ROOT/'scripts/JapaneseTranslator.spec')],cwd=ROOT,check=True)
     folder=ROOT/'dist/JapaneseTranslator'
+    verify_windows_bundle(folder)
     shutil.copytree(ROOT/'models',folder/'models',dirs_exist_ok=True,ignore=shutil.ignore_patterns('*.partial','*.chunks','*.assembling'))
     cuda=folder/'runtime/cuda';cuda.mkdir(parents=True,exist_ok=True)
     try:
@@ -84,12 +107,15 @@ def main():
     smoke(executable,'frozen-cpu','cpu')
     smoke(executable,'frozen-gpu','cuda')
     smoke(executable,'frozen-no-gpu','cuda',True)
-    assets=ROOT/'dist/release-v1.1.1';assets.mkdir(exist_ok=True)
+    gui_smoke(executable,'frozen-cpu','cpu')
+    gui_smoke(executable,'frozen-gpu','cuda')
+    gui_smoke(executable,'frozen-no-gpu','cuda',True)
+    assets=ROOT/'dist/release-v1.1.2';assets.mkdir(exist_ok=True)
     # No model/runtime is omitted to fit GitHub's per-file limit: use installer
     # data slices, each < 2 GiB, with a small ordinary Windows setup executable.
     subprocess.run([str(ROOT/'tools/inno6/ISCC.exe'),'/Q',f'/O{assets}',str(ROOT/'scripts/installer.iss')],cwd=ROOT,check=True)
     shutil.copy2(ROOT/'docs/INSTALL_OFFLINE.md',assets/'INSTALL_OFFLINE.md')
-    install_and_validate(assets,'安装 验证 v1.1.1')
+    install_and_validate(assets,'安装 验证 v1.1.2',seed_legacy_icu=True)
     sums=[]
     for path in sorted(assets.iterdir()):
         if path.name=='SHA256SUMS.txt' or not path.is_file():continue
